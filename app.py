@@ -346,6 +346,67 @@ def cadastrar_funcionario():
     return render_template('cadastrar_funcionario.html')
 
 
+@app.route('/editar_funcionario/<int:funcionario_id>', methods=['GET', 'POST'])
+def editar_funcionario(funcionario_id):
+    funcionario = Funcionario.query.get_or_404(funcionario_id)
+    
+    if request.method == 'POST':
+        funcionario.nome = request.form['nome']
+        funcionario.rg = request.form.get('rg', '')
+        funcionario.funcao = request.form.get('funcao', 'Não informado')
+        funcionario.telefone = request.form.get('telefone', '')
+        funcionario.email = request.form.get('email', '')
+        funcionario.senha = request.form.get('senha', '')
+        
+        # Converter datas
+        data_admissao_str = request.form.get('data_admissao')
+        if data_admissao_str:
+            funcionario.data_admissao = datetime.strptime(
+                data_admissao_str, '%Y-%m-%d').date()
+        
+        data_nascimento_str = request.form.get('data_nascimento')
+        if data_nascimento_str:
+            funcionario.data_nascimento = datetime.strptime(
+                data_nascimento_str, '%Y-%m-%d').date()
+        
+        # Validar CPF apenas se foi alterado
+        cpf_novo = request.form['cpf']
+        if cpf_novo != funcionario.cpf:
+            if not validar_cpf(cpf_novo):
+                flash('CPF inválido!', 'error')
+                return render_template('editar_funcionario.html', funcionario=funcionario)
+            
+            # Verificar se CPF já existe
+            if Funcionario.query.filter_by(cpf=cpf_novo).first():
+                flash('CPF já cadastrado por outro funcionário!', 'error')
+                return render_template('editar_funcionario.html', funcionario=funcionario)
+            
+            funcionario.cpf = cpf_novo
+        
+        db.session.commit()
+        flash('Funcionário atualizado com sucesso!', 'success')
+        return redirect(url_for('funcionarios'))
+    
+    return render_template('editar_funcionario.html', funcionario=funcionario)
+
+
+@app.route('/excluir_funcionario/<int:funcionario_id>', methods=['POST'])
+def excluir_funcionario(funcionario_id):
+    funcionario = Funcionario.query.get_or_404(funcionario_id)
+    
+    # Verificar se tem certificados
+    if funcionario.certificados:
+        flash(f'Não é possível excluir {funcionario.nome}. Funcionário possui certificados gerados.', 'error')
+        return redirect(url_for('funcionarios'))
+    
+    nome_funcionario = funcionario.nome
+    db.session.delete(funcionario)
+    db.session.commit()
+    
+    flash(f'Funcionário {nome_funcionario} excluído com sucesso!', 'success')
+    return redirect(url_for('funcionarios'))
+
+
 @app.route('/gerar_unitario')
 def gerar_unitario():
     funcionarios = Funcionario.query.all()
@@ -797,10 +858,12 @@ def importar_funcionarios():
                 cpf_formatado = f"{cpf_limpo[:3]}.{cpf_limpo[3:6]}.{cpf_limpo[6:9]}-{cpf_limpo[9:11]}"
 
                 # Verificar se funcionário já existe e atualizar
-                funcionario_existente = Funcionario.query.filter_by(cpf=cpf_formatado).first()
+                funcionario_existente = Funcionario.query.filter_by(
+                    cpf=cpf_formatado).first()
                 if funcionario_existente:
                     # Atualizar funcionário existente com nova função
-                    funcionario_existente.funcao = func_data.get('funcao', 'Instalador de Telas')
+                    funcionario_existente.funcao = func_data.get(
+                        'funcao', 'Instalador de Telas')
                     funcionario_existente.telefone = func_data['telefone']
                     funcionario_existente.email = func_data['email'] if func_data['email'] else None
                     funcionario_existente.senha = func_data['senha']
@@ -812,10 +875,12 @@ def importar_funcionarios():
                     func_data['data_nascimento'], '%d/%m/%Y').date()
 
                 # Verificar se funcionário já existe e atualizar
-                funcionario_existente = Funcionario.query.filter_by(cpf=cpf_formatado).first()
+                funcionario_existente = Funcionario.query.filter_by(
+                    cpf=cpf_formatado).first()
                 if funcionario_existente:
                     # Atualizar funcionário existente com nova função
-                    funcionario_existente.funcao = func_data.get('funcao', 'Instalador de Telas')
+                    funcionario_existente.funcao = func_data.get(
+                        'funcao', 'Instalador de Telas')
                     funcionario_existente.telefone = func_data['telefone']
                     funcionario_existente.email = func_data['email'] if func_data['email'] else None
                     funcionario_existente.senha = func_data['senha']
@@ -830,7 +895,8 @@ def importar_funcionarios():
                     telefone=func_data['telefone'],
                     email=func_data['email'] if func_data['email'] else None,
                     senha=func_data['senha'],
-                    funcao=func_data.get('funcao', 'Instalador de Telas'),  # Usar função específica ou padrão
+                    # Usar função específica ou padrão
+                    funcao=func_data.get('funcao', 'Instalador de Telas'),
                     data_admissao=datetime.now().date()  # Data atual como admissão
                 )
 

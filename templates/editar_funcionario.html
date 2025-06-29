@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Funcionário - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-edit me-2"></i>Editar Funcionário</h2>
+    <a href="{{ url_for('funcionarios') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="POST" id="formEditarFuncionario">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome Completo *</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               value="{{ funcionario.nome }}" required>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="cpf" class="form-label">CPF *</label>
+                        <input type="text" class="form-control" id="cpf" name="cpf" 
+                               value="{{ funcionario.cpf }}" required maxlength="14">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="rg" class="form-label">RG</label>
+                        <input type="text" class="form-control" id="rg" name="rg" 
+                               value="{{ funcionario.rg or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="funcao" class="form-label">Função *</label>
+                        <select class="form-control" id="funcao" name="funcao" required>
+                            <option value="">Selecione a função</option>
+                            <option value="Técnico de Segurança" {{ 'selected' if funcionario.funcao == 'Técnico de Segurança' }}>Técnico de Segurança</option>
+                            <option value="Supervisor de Instalação" {{ 'selected' if funcionario.funcao == 'Supervisor de Instalação' }}>Supervisor de Instalação</option>
+                            <option value="Instalador de Telas" {{ 'selected' if funcionario.funcao == 'Instalador de Telas' }}>Instalador de Telas</option>
+                            <option value="Auxiliar de Instalação" {{ 'selected' if funcionario.funcao == 'Auxiliar de Instalação' }}>Auxiliar de Instalação</option>
+                            <option value="Menor Aprendiz" {{ 'selected' if funcionario.funcao == 'Menor Aprendiz' }}>Menor Aprendiz</option>
+                            <option value="Assistente Administrativo" {{ 'selected' if funcionario.funcao == 'Assistente Administrativo' }}>Assistente Administrativo</option>
+                            <option value="Gerente" {{ 'selected' if funcionario.funcao == 'Gerente' }}>Gerente</option>
+                            <option value="Coordenador" {{ 'selected' if funcionario.funcao == 'Coordenador' }}>Coordenador</option>
+                            <option value="Outros" {{ 'selected' if funcionario.funcao not in ['Técnico de Segurança', 'Supervisor de Instalação', 'Instalador de Telas', 'Auxiliar de Instalação', 'Menor Aprendiz', 'Assistente Administrativo', 'Gerente', 'Coordenador'] }}>Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="data_admissao" class="form-label">Data de Admissão</label>
+                        <input type="date" class="form-control" id="data_admissao" name="data_admissao"
+                               value="{{ funcionario.data_admissao.strftime('%Y-%m-%d') if funcionario.data_admissao }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                        <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
+                               value="{{ funcionario.data_nascimento.strftime('%Y-%m-%d') if funcionario.data_nascimento }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" name="telefone"
+                               value="{{ funcionario.telefone or '' }}" placeholder="(11) 99999-9999">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               value="{{ funcionario.email or '' }}" placeholder="funcionario@altatelas.com">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="senha"
+                               value="{{ funcionario.senha or '' }}" placeholder="Digite uma senha">
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-danger" onclick="excluirFuncionario({{ funcionario.id }})">
+                    <i class="fas fa-trash me-1"></i>Excluir Funcionário
+                </button>
+                <div>
+                    <a href="{{ url_for('funcionarios') }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Atenção!</strong> Esta ação é irreversível.</p>
+                <p>Tem certeza de que deseja excluir o funcionário <strong>{{ funcionario.nome }}</strong>?</p>
+                {% if funcionario.certificados %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Este funcionário possui {{ funcionario.certificados|length }} certificado(s) gerado(s) e não pode ser excluído.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                {% if not funcionario.certificados %}
+                <form method="POST" action="{{ url_for('excluir_funcionario', funcionario_id=funcionario.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Excluir
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Máscara para CPF
+document.getElementById('cpf').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    e.target.value = value;
+});
+
+// Máscara para telefone
+document.getElementById('telefone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    value = value.replace(/(\d{2})(\d)/, '($1) $2');
+    value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    e.target.value = value;
+});
+
+// Função para excluir funcionário
+function excluirFuncionario(id) {
+    var modal = new bootstrap.Modal(document.getElementById('modalExcluir'));
+    modal.show();
+}
+
+// Validação do formulário
+document.getElementById('formEditarFuncionario').addEventListener('submit', function(e) {
+    const nome = document.getElementById('nome').value.trim();
+    const cpf = document.getElementById('cpf').value.trim();
+    const funcao = document.getElementById('funcao').value;
+    
+    if (!nome || !cpf || !funcao) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios (Nome, CPF e Função).');
+        return false;
+    }
+    
+    // Validação básica de CPF
+    if (cpf.replace(/\D/g, '').length !== 11) {
+        e.preventDefault();
+        alert('CPF deve ter 11 dígitos.');
+        return false;
+    }
+});
+</script>
+{% endblock %}
