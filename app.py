@@ -796,15 +796,31 @@ def importar_funcionarios():
                 cpf_limpo = re.sub(r'[^0-9]', '', func_data['cpf'])
                 cpf_formatado = f"{cpf_limpo[:3]}.{cpf_limpo[3:6]}.{cpf_limpo[6:9]}-{cpf_limpo[9:11]}"
 
-                if Funcionario.query.filter_by(cpf=cpf_formatado).first():
-                    erros += 1
-                    mensagens_erro.append(
-                        f"CPF {cpf_formatado} já cadastrado - {func_data['nome']}")
+                # Verificar se funcionário já existe e atualizar
+                funcionario_existente = Funcionario.query.filter_by(cpf=cpf_formatado).first()
+                if funcionario_existente:
+                    # Atualizar funcionário existente com nova função
+                    funcionario_existente.funcao = func_data.get('funcao', 'Instalador de Telas')
+                    funcionario_existente.telefone = func_data['telefone']
+                    funcionario_existente.email = func_data['email'] if func_data['email'] else None
+                    funcionario_existente.senha = func_data['senha']
+                    sucessos += 1
                     continue
 
                 # Converter data de nascimento
                 data_nascimento = datetime.strptime(
                     func_data['data_nascimento'], '%d/%m/%Y').date()
+
+                # Verificar se funcionário já existe e atualizar
+                funcionario_existente = Funcionario.query.filter_by(cpf=cpf_formatado).first()
+                if funcionario_existente:
+                    # Atualizar funcionário existente com nova função
+                    funcionario_existente.funcao = func_data.get('funcao', 'Instalador de Telas')
+                    funcionario_existente.telefone = func_data['telefone']
+                    funcionario_existente.email = func_data['email'] if func_data['email'] else None
+                    funcionario_existente.senha = func_data['senha']
+                    sucessos += 1
+                    continue
 
                 # Criar funcionário
                 funcionario = Funcionario(
