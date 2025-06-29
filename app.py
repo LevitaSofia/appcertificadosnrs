@@ -14,6 +14,8 @@ app.config['SECRET_KEY'] = 'sua-chave-secreta-aqui'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificados.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/imagens'
+app.config['VIDEOS_FOLDER'] = 'static/videos'
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB máximo por arquivo
 
 db = SQLAlchemy(app)
 
@@ -35,6 +37,8 @@ class Funcionario(db.Model):
 
     certificados = db.relationship(
         'CertificadoGerado', backref='funcionario', lazy=True)
+    progresso = db.relationship(
+        'ProgressoTreinamento', backref='funcionario', lazy=True)
 
 
 class CertificadoGerado(db.Model):
@@ -52,6 +56,54 @@ class ModeloNR(db.Model):
     tipo_nr = db.Column(db.String(10), unique=True, nullable=False)
     caminho_modelo_pptx = db.Column(db.String(300), nullable=False)
     descricao = db.Column(db.String(200))
+
+
+class Cargo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), unique=True, nullable=False)
+    descricao = db.Column(db.String(200), nullable=True)
+    ativo = db.Column(db.Boolean, default=True, nullable=False)
+    data_criacao = db.Column(
+        db.Date, default=datetime.now().date, nullable=False)
+
+
+class Treinamento(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    tipo_nr = db.Column(db.String(10), nullable=False)
+    duracao_minutos = db.Column(db.Integer, nullable=True)
+    arquivo_video = db.Column(db.String(500), nullable=False)
+    thumbnail = db.Column(db.String(500), nullable=True)
+    ativo = db.Column(db.Boolean, default=True, nullable=False)
+    obrigatorio = db.Column(db.Boolean, default=False, nullable=False)
+    data_criacao = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    data_atualizacao = db.Column(
+        db.DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+    # Relacionamentos
+    progresso = db.relationship(
+        'ProgressoTreinamento', backref='treinamento', lazy=True, cascade='all, delete-orphan')
+
+
+class ProgressoTreinamento(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    funcionario_id = db.Column(db.Integer, db.ForeignKey(
+        'funcionario.id'), nullable=False)
+    treinamento_id = db.Column(db.Integer, db.ForeignKey(
+        'treinamento.id'), nullable=False)
+    progresso_percent = db.Column(
+        db.Float, default=0.0, nullable=False)  # 0-100
+    tempo_assistido_segundos = db.Column(db.Integer, default=0, nullable=False)
+    concluido = db.Column(db.Boolean, default=False, nullable=False)
+    data_inicio = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    data_conclusao = db.Column(db.DateTime, nullable=True)
+    data_ultima_visualizacao = db.Column(
+        db.DateTime, default=datetime.now, nullable=False)
+
+    # Constraint única: um funcionário só pode ter um progresso por treinamento
+    __table_args__ = (db.UniqueConstraint(
+        'funcionario_id', 'treinamento_id', name='unique_funcionario_treinamento'),)
 
 # Função para validar CPF
 
@@ -343,13 +395,14 @@ def cadastrar_funcionario():
         flash('Funcionário cadastrado com sucesso!', 'success')
         return redirect(url_for('funcionarios'))
 
-    return render_template('cadastrar_funcionario.html')
+    cargos = Cargo.query.filter_by(ativo=True).order_by(Cargo.nome).all()
+    return render_template('cadastrar_funcionario.html', cargos=cargos)
 
 
 @app.route('/editar_funcionario/<int:funcionario_id>', methods=['GET', 'POST'])
 def editar_funcionario(funcionario_id):
     funcionario = Funcionario.query.get_or_404(funcionario_id)
-    
+
     if request.method == 'POST':
         funcionario.nome = request.form['nome']
         funcionario.rg = request.form.get('rg', '')
@@ -357,52 +410,56 @@ def editar_funcionario(funcionario_id):
         funcionario.telefone = request.form.get('telefone', '')
         funcionario.email = request.form.get('email', '')
         funcionario.senha = request.form.get('senha', '')
-        
+
         # Converter datas
         data_admissao_str = request.form.get('data_admissao')
         if data_admissao_str:
             funcionario.data_admissao = datetime.strptime(
                 data_admissao_str, '%Y-%m-%d').date()
-        
+
         data_nascimento_str = request.form.get('data_nascimento')
         if data_nascimento_str:
             funcionario.data_nascimento = datetime.strptime(
                 data_nascimento_str, '%Y-%m-%d').date()
-        
+
         # Validar CPF apenas se foi alterado
         cpf_novo = request.form['cpf']
         if cpf_novo != funcionario.cpf:
             if not validar_cpf(cpf_novo):
                 flash('CPF inválido!', 'error')
-                return render_template('editar_funcionario.html', funcionario=funcionario)
-            
+                cargos = Cargo.query.filter_by(
+                    ativo=True).order_by(Cargo.nome).all()
+                return render_template('editar_funcionario.html', funcionario=funcionario, cargos=cargos)
+
             # Verificar se CPF já existe
             if Funcionario.query.filter_by(cpf=cpf_novo).first():
                 flash('CPF já cadastrado por outro funcionário!', 'error')
                 return render_template('editar_funcionario.html', funcionario=funcionario)
-            
+
             funcionario.cpf = cpf_novo
-        
+
         db.session.commit()
         flash('Funcionário atualizado com sucesso!', 'success')
         return redirect(url_for('funcionarios'))
-    
-    return render_template('editar_funcionario.html', funcionario=funcionario)
+
+    cargos = Cargo.query.filter_by(ativo=True).order_by(Cargo.nome).all()
+    return render_template('editar_funcionario.html', funcionario=funcionario, cargos=cargos)
 
 
 @app.route('/excluir_funcionario/<int:funcionario_id>', methods=['POST'])
 def excluir_funcionario(funcionario_id):
     funcionario = Funcionario.query.get_or_404(funcionario_id)
-    
+
     # Verificar se tem certificados
     if funcionario.certificados:
-        flash(f'Não é possível excluir {funcionario.nome}. Funcionário possui certificados gerados.', 'error')
+        flash(
+            f'Não é possível excluir {funcionario.nome}. Funcionário possui certificados gerados.', 'error')
         return redirect(url_for('funcionarios'))
-    
+
     nome_funcionario = funcionario.nome
     db.session.delete(funcionario)
     db.session.commit()
-    
+
     flash(f'Funcionário {nome_funcionario} excluído com sucesso!', 'success')
     return redirect(url_for('funcionarios'))
 
@@ -496,7 +553,8 @@ def relatorios():
 @app.route('/configuracoes')
 def configuracoes():
     modelos = ModeloNR.query.all()
-    return render_template('configuracoes.html', modelos=modelos)
+    cargos = Cargo.query.filter_by(ativo=True).all()
+    return render_template('configuracoes.html', modelos=modelos, cargos=cargos)
 
 
 @app.route('/cadastrar_modelo', methods=['POST'])
@@ -523,6 +581,291 @@ def cadastrar_modelo():
 
     flash('Modelo cadastrado! Lembre-se de colocar o arquivo PowerPoint na pasta modelos_nr/', 'success')
     return redirect(url_for('configuracoes'))
+
+
+@app.route('/cadastrar_cargo', methods=['POST'])
+def cadastrar_cargo():
+    nome = request.form['nome'].strip()
+    descricao = request.form.get('descricao', '').strip()
+
+    if not nome:
+        flash('Nome do cargo é obrigatório!', 'error')
+        return redirect(url_for('configuracoes'))
+
+    # Verificar se já existe
+    if Cargo.query.filter_by(nome=nome, ativo=True).first():
+        flash('Cargo já existe!', 'error')
+        return redirect(url_for('configuracoes'))
+
+    cargo = Cargo(
+        nome=nome,
+        descricao=descricao if descricao else None
+    )
+
+    db.session.add(cargo)
+    db.session.commit()
+
+    flash(f'Cargo "{nome}" cadastrado com sucesso!', 'success')
+    return redirect(url_for('configuracoes'))
+
+
+@app.route('/editar_cargo/<int:cargo_id>', methods=['POST'])
+def editar_cargo(cargo_id):
+    cargo = Cargo.query.get_or_404(cargo_id)
+
+    nome = request.form['nome'].strip()
+    descricao = request.form.get('descricao', '').strip()
+
+    if not nome:
+        flash('Nome do cargo é obrigatório!', 'error')
+        return redirect(url_for('configuracoes'))
+
+    # Verificar se já existe outro cargo com mesmo nome
+    cargo_existente = Cargo.query.filter_by(nome=nome, ativo=True).first()
+    if cargo_existente and cargo_existente.id != cargo_id:
+        flash('Já existe outro cargo com este nome!', 'error')
+        return redirect(url_for('configuracoes'))
+
+    cargo.nome = nome
+    cargo.descricao = descricao if descricao else None
+
+    db.session.commit()
+
+    flash(f'Cargo "{nome}" atualizado com sucesso!', 'success')
+    return redirect(url_for('configuracoes'))
+
+
+@app.route('/excluir_cargo/<int:cargo_id>', methods=['POST'])
+def excluir_cargo(cargo_id):
+    cargo = Cargo.query.get_or_404(cargo_id)
+
+    # Verificar se há funcionários usando este cargo
+    funcionarios_com_cargo = Funcionario.query.filter_by(
+        funcao=cargo.nome).count()
+
+    if funcionarios_com_cargo > 0:
+        flash(
+            f'Não é possível excluir o cargo "{cargo.nome}". Existem {funcionarios_com_cargo} funcionário(s) com este cargo.', 'error')
+        return redirect(url_for('configuracoes'))
+
+    # Desativar ao invés de excluir (soft delete)
+    cargo.ativo = False
+    db.session.commit()
+
+    flash(f'Cargo "{cargo.nome}" removido com sucesso!', 'success')
+    return redirect(url_for('configuracoes'))
+
+
+@app.route('/api/cargos')
+def api_cargos():
+    """API para listar cargos ativos - usado nos formulários"""
+    cargos = Cargo.query.filter_by(ativo=True).order_by(Cargo.nome).all()
+    return jsonify([{'id': c.id, 'nome': c.nome, 'descricao': c.descricao} for c in cargos])
+
+
+# ==================== CENTRAL DE TREINAMENTOS ====================
+
+@app.route('/treinamentos')
+def treinamentos():
+    """Página principal da central de treinamentos"""
+    treinamentos = Treinamento.query.filter_by(ativo=True).order_by(Treinamento.data_criacao.desc()).all()
+    modelos_nr = ModeloNR.query.all()
+    
+    # Agrupar treinamentos por NR
+    treinamentos_por_nr = {}
+    for treinamento in treinamentos:
+        if treinamento.tipo_nr not in treinamentos_por_nr:
+            treinamentos_por_nr[treinamento.tipo_nr] = []
+        treinamentos_por_nr[treinamento.tipo_nr].append(treinamento)
+    
+    return render_template('treinamentos.html', 
+                         treinamentos_por_nr=treinamentos_por_nr,
+                         modelos_nr=modelos_nr)
+
+
+@app.route('/treinamentos/admin')
+def treinamentos_admin():
+    """Página administrativa para gerenciar treinamentos"""
+    treinamentos = Treinamento.query.order_by(Treinamento.data_criacao.desc()).all()
+    modelos_nr = ModeloNR.query.all()
+    return render_template('treinamentos_admin.html', 
+                         treinamentos=treinamentos,
+                         modelos_nr=modelos_nr)
+
+
+@app.route('/treinamentos/upload', methods=['POST'])
+def upload_treinamento():
+    """Upload de novo vídeo de treinamento"""
+    try:
+        titulo = request.form['titulo'].strip()
+        descricao = request.form.get('descricao', '').strip()
+        tipo_nr = request.form['tipo_nr']
+        duracao_minutos = request.form.get('duracao_minutos', type=int)
+        obrigatorio = 'obrigatorio' in request.form
+        
+        if not titulo or not tipo_nr:
+            flash('Título e Tipo de NR são obrigatórios!', 'error')
+            return redirect(url_for('treinamentos_admin'))
+        
+        # Verificar se arquivo foi enviado
+        if 'arquivo_video' not in request.files:
+            flash('Nenhum arquivo de vídeo selecionado!', 'error')
+            return redirect(url_for('treinamentos_admin'))
+        
+        arquivo = request.files['arquivo_video']
+        if arquivo.filename == '':
+            flash('Nenhum arquivo selecionado!', 'error')
+            return redirect(url_for('treinamentos_admin'))
+        
+        # Validar extensão do arquivo
+        extensoes_permitidas = {'.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm'}
+        if not any(arquivo.filename.lower().endswith(ext) for ext in extensoes_permitidas):
+            flash('Formato de vídeo não suportado! Use: MP4, AVI, MOV, WMV, MKV ou WEBM', 'error')
+            return redirect(url_for('treinamentos_admin'))
+        
+        # Criar pasta de vídeos se não existir
+        videos_dir = os.path.join('static', 'videos')
+        os.makedirs(videos_dir, exist_ok=True)
+        
+        # Gerar nome único para o arquivo
+        nome_arquivo = secure_filename(arquivo.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        nome_arquivo = f"{timestamp}_{nome_arquivo}"
+        caminho_arquivo = os.path.join(videos_dir, nome_arquivo)
+        
+        # Salvar arquivo
+        arquivo.save(caminho_arquivo)
+        
+        # Criar registro no banco
+        treinamento = Treinamento(
+            titulo=titulo,
+            descricao=descricao if descricao else None,
+            tipo_nr=tipo_nr,
+            duracao_minutos=duracao_minutos,
+            arquivo_video=caminho_arquivo,
+            obrigatorio=obrigatorio
+        )
+        
+        db.session.add(treinamento)
+        db.session.commit()
+        
+        flash(f'Treinamento "{titulo}" adicionado com sucesso!', 'success')
+        return redirect(url_for('treinamentos_admin'))
+        
+    except Exception as e:
+        flash(f'Erro ao fazer upload: {str(e)}', 'error')
+        return redirect(url_for('treinamentos_admin'))
+
+
+@app.route('/treinamentos/editar/<int:treinamento_id>', methods=['POST'])
+def editar_treinamento(treinamento_id):
+    """Editar treinamento existente"""
+    treinamento = Treinamento.query.get_or_404(treinamento_id)
+    
+    try:
+        treinamento.titulo = request.form['titulo'].strip()
+        treinamento.descricao = request.form.get('descricao', '').strip() or None
+        treinamento.tipo_nr = request.form['tipo_nr']
+        treinamento.duracao_minutos = request.form.get('duracao_minutos', type=int)
+        treinamento.obrigatorio = 'obrigatorio' in request.form
+        treinamento.data_atualizacao = datetime.now()
+        
+        db.session.commit()
+        flash(f'Treinamento "{treinamento.titulo}" atualizado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'Erro ao atualizar: {str(e)}', 'error')
+    
+    return redirect(url_for('treinamentos_admin'))
+
+
+@app.route('/treinamentos/excluir/<int:treinamento_id>', methods=['POST'])
+def excluir_treinamento(treinamento_id):
+    """Excluir/desativar treinamento"""
+    treinamento = Treinamento.query.get_or_404(treinamento_id)
+    
+    try:
+        # Verificar se há progresso de funcionários
+        progresso_count = ProgressoTreinamento.query.filter_by(treinamento_id=treinamento_id).count()
+        
+        if progresso_count > 0:
+            # Desativar ao invés de excluir se há progresso
+            treinamento.ativo = False
+            flash(f'Treinamento "{treinamento.titulo}" foi desativado (há progresso de funcionários).', 'warning')
+        else:
+            # Excluir arquivo e registro se não há progresso
+            if os.path.exists(treinamento.arquivo_video):
+                os.remove(treinamento.arquivo_video)
+            db.session.delete(treinamento)
+            flash(f'Treinamento "{treinamento.titulo}" excluído com sucesso!', 'success')
+        
+        db.session.commit()
+        
+    except Exception as e:
+        flash(f'Erro ao excluir: {str(e)}', 'error')
+    
+    return redirect(url_for('treinamentos_admin'))
+
+
+@app.route('/treinamentos/assistir/<int:treinamento_id>')
+def assistir_treinamento(treinamento_id):
+    """Página para assistir um treinamento específico"""
+    treinamento = Treinamento.query.get_or_404(treinamento_id)
+    
+    # Por enquanto, vamos simular um funcionário logado (ID = 1)
+    # Em produção, isso viria da sessão do usuário
+    funcionario_id = 1  # TEMPORÁRIO - substituir por sessão real
+    
+    # Buscar ou criar progresso
+    progresso = ProgressoTreinamento.query.filter_by(
+        funcionario_id=funcionario_id,
+        treinamento_id=treinamento_id
+    ).first()
+    
+    if not progresso:
+        progresso = ProgressoTreinamento(
+            funcionario_id=funcionario_id,
+            treinamento_id=treinamento_id
+        )
+        db.session.add(progresso)
+        db.session.commit()
+    
+    return render_template('assistir_treinamento.html', 
+                         treinamento=treinamento,
+                         progresso=progresso)
+
+
+@app.route('/treinamentos/progresso/<int:treinamento_id>', methods=['POST'])
+def atualizar_progresso(treinamento_id):
+    """API para atualizar progresso de visualização"""
+    try:
+        funcionario_id = 1  # TEMPORÁRIO - substituir por sessão real
+        tempo_assistido = request.json.get('tempo_assistido', 0)
+        progresso_percent = request.json.get('progresso_percent', 0)
+        
+        progresso = ProgressoTreinamento.query.filter_by(
+            funcionario_id=funcionario_id,
+            treinamento_id=treinamento_id
+        ).first()
+        
+        if progresso:
+            progresso.tempo_assistido_segundos = tempo_assistido
+            progresso.progresso_percent = progresso_percent
+            progresso.data_ultima_visualizacao = datetime.now()
+            
+            # Marcar como concluído se progresso >= 90%
+            if progresso_percent >= 90 and not progresso.concluido:
+                progresso.concluido = True
+                progresso.data_conclusao = datetime.now()
+            
+            db.session.commit()
+            
+            return jsonify({'status': 'success', 'concluido': progresso.concluido})
+        
+        return jsonify({'status': 'error', 'message': 'Progresso não encontrado'})
+        
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
 
 
 @app.route('/importar_funcionarios', methods=['POST'])
@@ -952,6 +1295,30 @@ def criar_tabelas():
                 descricao=modelo_info['descricao']
             )
             db.session.add(modelo)
+
+    # Criar cargos padrão se não existirem
+    cargos_padrao = [
+        {'nome': 'Técnico de Segurança',
+            'descricao': 'Responsável pela segurança do trabalho'},
+        {'nome': 'Supervisor de Instalação',
+            'descricao': 'Supervisiona equipes de instalação'},
+        {'nome': 'Instalador de Telas',
+            'descricao': 'Executa instalação de telas de proteção'},
+        {'nome': 'Auxiliar de Instalação', 'descricao': 'Auxilia nas instalações'},
+        {'nome': 'Menor Aprendiz', 'descricao': 'Aprendiz menor de idade'},
+        {'nome': 'Assistente Administrativo',
+            'descricao': 'Atividades administrativas'},
+        {'nome': 'Gerente', 'descricao': 'Gerenciamento de equipes e projetos'},
+        {'nome': 'Coordenador', 'descricao': 'Coordenação de atividades específicas'}
+    ]
+
+    for cargo_info in cargos_padrao:
+        if not Cargo.query.filter_by(nome=cargo_info['nome'], ativo=True).first():
+            cargo = Cargo(
+                nome=cargo_info['nome'],
+                descricao=cargo_info['descricao']
+            )
+            db.session.add(cargo)
 
     db.session.commit()
 

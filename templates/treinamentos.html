@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Central de Treinamentos - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-play-circle me-2"></i>Central de Treinamentos</h2>
+    <a href="{{ url_for('treinamentos_admin') }}" class="btn btn-primary">
+        <i class="fas fa-cog me-1"></i>Gerenciar Treinamentos
+    </a>
+</div>
+
+<!-- Estatísticas rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-video fa-2x mb-2"></i>
+                <h4>{{ treinamentos_por_nr.values()|map('length')|sum }}</h4>
+                <p class="mb-0">Total de Vídeos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                <h4>{{ treinamentos_por_nr.keys()|length }}</h4>
+                <p class="mb-0">Tipos de NR</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h4>0%</h4>
+                <p class="mb-0">Progresso Médio</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-certificate fa-2x mb-2"></i>
+                <h4>0</h4>
+                <p class="mb-0">Concluídos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if treinamentos_por_nr %}
+<!-- Treinamentos por NR -->
+{% for tipo_nr, treinamentos in treinamentos_por_nr.items() %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-shield-alt me-2"></i>{{ tipo_nr }} - Treinamentos
+            <span class="badge bg-light text-dark ms-2">{{ treinamentos|length }} vídeo(s)</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for treinamento in treinamentos %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <!-- Thumbnail do vídeo -->
+                    <div class="position-relative">
+                        {% if treinamento.thumbnail %}
+                        <img src="{{ treinamento.thumbnail }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fas fa-play-circle fa-4x text-white opacity-75"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Badge de obrigatório -->
+                        {% if treinamento.obrigatorio %}
+                        <span class="position-absolute top-0 start-0 badge bg-danger m-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Obrigatório
+                        </span>
+                        {% endif %}
+                        
+                        <!-- Duração -->
+                        {% if treinamento.duracao_minutos %}
+                        <span class="position-absolute bottom-0 end-0 badge bg-dark m-2">
+                            <i class="fas fa-clock me-1"></i>{{ treinamento.duracao_minutos }}min
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ treinamento.titulo }}</h6>
+                        {% if treinamento.descricao %}
+                        <p class="card-text text-muted small flex-grow-1">
+                            {{ treinamento.descricao[:100] }}...
+                        </p>
+                        {% endif %}
+                        
+                        <!-- Progresso (simulado por enquanto) -->
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">Progresso:</small>
+                                <small class="text-muted">0%</small>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <a href="{{ url_for('assistir_treinamento', treinamento_id=treinamento.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-play me-1"></i>Assistir Treinamento
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% else %}
+<!-- Estado vazio -->
+<div class="text-center py-5">
+    <i class="fas fa-video fa-5x text-muted mb-4"></i>
+    <h3 class="text-muted">Nenhum treinamento disponível</h3>
+    <p class="text-muted">Os treinamentos em vídeo serão exibidos aqui quando forem adicionados.</p>
+    <a href="{{ url_for('treinamentos_admin') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Adicionar Primeiro Treinamento
+    </a>
+</div>
+{% endif %}
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #007bff 0%, #28a745 100%);
+}
+</style>
+{% endblock %}

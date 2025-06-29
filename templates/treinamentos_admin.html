@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Treinamentos - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cog me-2"></i>Gerenciar Treinamentos</h2>
+    <div class="btn-group">
+        <a href="{{ url_for('treinamentos') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar à Central
+        </a>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalUpload">
+            <i class="fas fa-plus me-1"></i>Adicionar Treinamento
+        </button>
+    </div>
+</div>
+
+<!-- Lista de treinamentos -->
+<div class="card shadow">
+    <div class="card-body">
+        {% if treinamentos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Título</th>
+                        <th>NR</th>
+                        <th>Duração</th>
+                        <th>Status</th>
+                        <th>Obrigatório</th>
+                        <th>Data Criação</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treinamento in treinamentos %}
+                    <tr class="{{ '' if treinamento.ativo else 'table-secondary' }}">
+                        <td>
+                            <strong>{{ treinamento.titulo }}</strong>
+                            {% if treinamento.descricao %}
+                            <br><small class="text-muted">{{ treinamento.descricao[:80] }}...</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ treinamento.tipo_nr }}</span>
+                        </td>
+                        <td>
+                            {% if treinamento.duracao_minutos %}
+                                <i class="fas fa-clock me-1"></i>{{ treinamento.duracao_minutos }}min
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if treinamento.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if treinamento.obrigatorio %}
+                                <span class="badge bg-danger">Obrigatório</span>
+                            {% else %}
+                                <span class="badge bg-info">Opcional</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ treinamento.data_criacao.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('assistir_treinamento', treinamento_id=treinamento.id) }}" 
+                                   class="btn btn-sm btn-outline-success" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-warning" 
+                                        onclick="editarTreinamento({{ treinamento.id }}, '{{ treinamento.titulo }}', '{{ treinamento.descricao or '' }}', '{{ treinamento.tipo_nr }}', {{ treinamento.duracao_minutos or 'null' }}, {{ treinamento.obrigatorio|lower }})" 
+                                        title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="excluirTreinamento({{ treinamento.id }}, '{{ treinamento.titulo }}')"
+                                        title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-video fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Nenhum treinamento cadastrado</h4>
+            <p class="text-muted">Adicione o primeiro vídeo de treinamento para começar.</p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUpload">
+                <i class="fas fa-plus me-1"></i>Adicionar Primeiro Treinamento
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Upload -->
+<div class="modal fade" id="modalUpload" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Adicionar Novo Treinamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('upload_treinamento') }}" enctype="multipart/form-data" id="formUpload">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título do Treinamento *</label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" required maxlength="200">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="tipo_nr" class="form-label">Tipo de NR *</label>
+                                <select class="form-control" id="tipo_nr" name="tipo_nr" required>
+                                    <option value="">Selecione...</option>
+                                    {% for modelo in modelos_nr %}
+                                    <option value="{{ modelo.tipo_nr }}">{{ modelo.tipo_nr }} - {{ modelo.descricao }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3" 
+                                  placeholder="Descrição opcional do treinamento..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="duracao_minutos" class="form-label">Duração (minutos)</label>
+                                <input type="number" class="form-control" id="duracao_minutos" name="duracao_minutos" 
+                                       min="1" max="9999" placeholder="Ex: 30">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="obrigatorio" name="obrigatorio">
+                                    <label class="form-check-label" for="obrigatorio">
+                                        <strong>Treinamento Obrigatório</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="arquivo_video" class="form-label">Arquivo de Vídeo *</label>
+                        <input type="file" class="form-control" id="arquivo_video" name="arquivo_video" 
+                               accept=".mp4,.avi,.mov,.wmv,.mkv,.webm" required>
+                        <div class="form-text">
+                            Formatos suportados: MP4, AVI, MOV, WMV, MKV, WEBM. Tamanho máximo: 500MB.
+                        </div>
+                    </div>
+                    
+                    <!-- Progresso do upload -->
+                    <div class="progress d-none" id="progressUpload">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload me-1"></i>Fazer Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Treinamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="formEditar">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_titulo" class="form-label">Título *</label>
+                        <input type="text" class="form-control" id="edit_titulo" name="titulo" required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_tipo_nr" class="form-label">Tipo de NR *</label>
+                        <select class="form-control" id="edit_tipo_nr" name="tipo_nr" required>
+                            {% for modelo in modelos_nr %}
+                            <option value="{{ modelo.tipo_nr }}">{{ modelo.tipo_nr }} - {{ modelo.descricao }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="edit_descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_duracao_minutos" class="form-label">Duração (minutos)</label>
+                        <input type="number" class="form-control" id="edit_duracao_minutos" name="duracao_minutos" min="1" max="9999">
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="edit_obrigatorio" name="obrigatorio">
+                        <label class="form-check-label" for="edit_obrigatorio">
+                            Treinamento Obrigatório
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função para editar treinamento
+function editarTreinamento(id, titulo, descricao, tipo_nr, duracao, obrigatorio) {
+    document.getElementById('edit_titulo').value = titulo;
+    document.getElementById('edit_descricao').value = descricao;
+    document.getElementById('edit_tipo_nr').value = tipo_nr;
+    document.getElementById('edit_duracao_minutos').value = duracao || '';
+    document.getElementById('edit_obrigatorio').checked = obrigatorio;
+    
+    document.getElementById('formEditar').action = `/treinamentos/editar/${id}`;
+    
+    new bootstrap.Modal(document.getElementById('modalEditar')).show();
+}
+
+// Função para excluir treinamento
+function excluirTreinamento(id, titulo) {
+    Swal.fire({
+        title: 'Confirmar Exclusão',
+        html: `
+            <p><strong>Atenção!</strong> Esta ação não pode ser desfeita.</p>
+            <p>Tem certeza de que deseja excluir o treinamento <strong>"${titulo}"</strong>?</p>
+            <div class="alert alert-warning text-start mt-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <small>Se houver funcionários assistindo, o treinamento será apenas desativado.</small>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/treinamentos/excluir/${id}`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+// Progresso do upload
+document.getElementById('formUpload').addEventListener('submit', function(e) {
+    const progressDiv = document.getElementById('progressUpload');
+    const progressBar = progressDiv.querySelector('.progress-bar');
+    
+    progressDiv.classList.remove('d-none');
+    
+    // Simular progresso (em produção, usar XMLHttpRequest para progresso real)
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 95) progress = 95;
+        
+        progressBar.style.width = progress + '%';
+        
+        if (progress >= 95) {
+            clearInterval(interval);
+        }
+    }, 500);
+});
+</script>
+{% endblock %}

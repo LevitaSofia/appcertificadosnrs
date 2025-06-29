@@ -46,6 +46,15 @@
                             <li><a class="dropdown-item" href="{{ url_for('gerar_lote') }}">Gerar em Lote</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-play-circle me-1"></i>Treinamentos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('treinamentos') }}">Central de Treinamentos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('treinamentos_admin') }}">Gerenciar Treinamentos</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('relatorios') }}">
                             <i class="fas fa-chart-bar me-1"></i>Relatórios

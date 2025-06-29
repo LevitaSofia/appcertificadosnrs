@@ -31,9 +31,19 @@
                             <input type="text" class="form-control" id="rg" name="rg">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="funcao" class="form-label">Função/Cargo</label>
-                            <input type="text" class="form-control" id="funcao" name="funcao"
-                                placeholder="Ex: Operador, Técnico, etc." value="Funcionário">
+                            <label for="funcao" class="form-label">Função/Cargo *</label>
+                            <select class="form-control" id="funcao" name="funcao" required>
+                                <option value="">Selecione a função</option>
+                                {% for cargo in cargos %}
+                                <option value="{{ cargo.nome }}">{{ cargo.nome }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Não encontrou a função? <a href="{{ url_for('configuracoes') }}" target="_blank">Adicione nas configurações</a>
+                                </small>
+                            </div>
                         </div>
                     </div>
 
