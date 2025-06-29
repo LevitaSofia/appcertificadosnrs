@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado da Geração em Lote - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Resultado da Geração em Lote
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h5>{{ resultados|length }}</h5>
+                                <p class="mb-0">Total Processados</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h5>{{ resultados|selectattr('sucesso')|list|length }}</h5>
+                                <p class="mb-0">Sucessos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h5>{{ resultados|rejectattr('sucesso')|list|length }}</h5>
+                                <p class="mb-0">Erros</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th class="text-center">Status</th>
+                                <th>Resultado</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resultado in resultados %}
+                            <tr>
+                                <td>
+                                    <strong>{{ resultado.funcionario }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    {% if resultado.sucesso %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Sucesso
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times me-1"></i>Erro
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if resultado.sucesso %}
+                                    <small class="text-muted">{{ resultado.resultado }}</small>
+                                    {% else %}
+                                    <small class="text-danger">{{ resultado.resultado }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if resultado.sucesso %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="baixarCertificado('{{ resultado.resultado }}')"
+                                        title="Baixar Certificado">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <a href="{{ url_for('gerar_lote') }}" class="btn btn-outline-warning me-md-2">
+                        <i class="fas fa-redo me-1"></i>Gerar Outro Lote
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-1"></i>Voltar ao Início
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function baixarCertificado(caminho) {
+        // Implementar download do certificado
+        window.open(`/download_certificado?caminho=${encodeURIComponent(caminho)}`, '_blank');
+    }
+</script>
+{% endblock %}

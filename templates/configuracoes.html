@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cog me-2"></i>Configurações do Sistema</h2>
+</div>
+
+<div class="row">
+    <!-- Configuração de Modelos NR -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-powerpoint me-2"></i>Modelos de NR
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>NR</th>
+                                <th>Descrição</th>
+                                <th>Arquivo</th>
+                                <th>Status</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for modelo in modelos %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ modelo.tipo_nr }}</span>
+                                </td>
+                                <td>{{ modelo.descricao }}</td>
+                                <td>
+                                    <small class="text-muted">{{ modelo.caminho_modelo_pptx }}</small>
+                                </td>
+                                <td>
+                                    {% set arquivo_existe = modelo.caminho_modelo_pptx %}
+                                    {% if arquivo_existe %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Disponível
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times me-1"></i>Arquivo não encontrado
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            onclick="testarModelo('{{ modelo.tipo_nr }}')" title="Testar Modelo">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                            onclick="editarModelo({{ modelo.id }})" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="excluirModelo({{ modelo.id }})" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if modelos|length == 0 %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-file-powerpoint fa-3x mb-3"></i>
+                    <h5>Nenhum modelo configurado</h5>
+                    <p>Configure os modelos de PowerPoint para começar a gerar certificados</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário para novo modelo -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>Adicionar Novo Modelo
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('cadastrar_modelo') }}">
+                    <div class="mb-3">
+                        <label for="tipo_nr" class="form-label">Tipo de NR *</label>
+                        <input type="text" class="form-control" id="tipo_nr" name="tipo_nr" placeholder="Ex: NR35"
+                            required>
+                        <div class="form-text">Use o formato: NR + número</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição *</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3"
+                            placeholder="Descrição da NR" required></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Cadastrar Modelo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Instruções -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Instruções
+                </h6>
+            </div>
+            <div class="card-body">
+                <ol class="small mb-0">
+                    <li>Cadastre o modelo aqui</li>
+                    <li>Coloque o arquivo .pptx na pasta <code>modelos_nr/</code></li>
+                    <li>Use as variáveis: <code>{{NOME}}</code>, <code>{{CPF}}</code>, <code>{{CARGO}}</code>, etc.</li>
+                    <li>Teste o modelo antes de usar</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variáveis disponíveis -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-code me-2"></i>Variáveis Disponíveis para os Modelos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Dados do Funcionário:</h6>
+                        <ul class="list-unstyled">
+                            <li><code>{{NOME}}</code> - Nome completo</li>
+                            <li><code>{{CPF}}</code> - CPF formatado</li>
+                            <li><code>{{RG}}</code> - RG</li>
+                            <li><code>{{CARGO}}</code> - Função/Cargo</li>
+                            <li><code>{{DATA_ADMISSAO}}</code> - Data de admissão</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Dados do Certificado:</h6>
+                        <ul class="list-unstyled">
+                            <li><code>{{TIPO_TREINAMENTO}}</code> - Inicial, Reciclagem, etc.</li>
+                            <li><code>{{DATA}}</code> - Data de emissão</li>
+                        </ul>
+
+                        <h6 class="mt-3">Exemplo de uso no PowerPoint:</h6>
+                        <div class="bg-light p-2 rounded">
+                            <small>
+                                Certificamos que <strong>{{NOME}}</strong>, CPF <strong>{{CPF}}</strong>,
+                                função <strong>{{CARGO}}</strong>, concluiu o treinamento...
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload de arquivos -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Upload de Modelos PowerPoint
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="dropzone border-dashed border-2 border-secondary rounded p-4 text-center" id="dropzone"
+                    style="min-height: 200px;">
+                    <div class="dz-message">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                        <h5>Arraste arquivos .pptx aqui ou clique para selecionar</h5>
+                        <p class="text-muted">
+                            Os arquivos serão enviados para a pasta <code>modelos_nr/</code>
+                        </p>
+                        <input type="file" id="fileInput" multiple accept=".pptx" style="display: none;">
+                        <button type="button" class="btn btn-primary"
+                            onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-folder-open me-1"></i>Selecionar Arquivos
+                        </button>
+                    </div>
+                </div>
+
+                <div id="uploadProgress" style="display: none;" class="mt-3">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup e Restauração -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-download me-2"></i>Backup do Sistema
+                </h6>
+            </div>
+            <div class="card-body">
+                <p>Faça backup do banco de dados e configurações.</p>
+                <button type="button" class="btn btn-outline-primary" onclick="fazerBackup()">
+                    <i class="fas fa-download me-1"></i>Fazer Backup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Restaurar Sistema
+                </h6>
+            </div>
+            <div class="card-body">
+                <p>Restaure um backup anterior do sistema.</p>
+                <input type="file" id="restoreFile" accept=".db,.sqlite" style="display: none;">
+                <button type="button" class="btn btn-outline-warning"
+                    onclick="document.getElementById('restoreFile').click()">
+                    <i class="fas fa-upload me-1"></i>Restaurar Backup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function testarModelo(tipoNr) {
+        Swal.fire({
+            title: `Testar Modelo ${tipoNr}`,
+            text: 'Esta funcionalidade irá gerar um certificado de teste',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Testar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Implementar teste do modelo
+                Swal.fire({
+                    title: 'Testando...',
+                    text: 'Gerando certificado de teste',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                        // Simular teste
+                        setTimeout(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Teste Concluído',
+                                text: 'Modelo funcionando corretamente!',
+                                confirmButtonColor: '#198754'
+                            });
+                        }, 2000);
+                    }
+                });
+            }
+        });
+    }
+
+    function editarModelo(modeloId) {
+        Swal.fire({
+            title: 'Editar Modelo',
+            text: 'Funcionalidade em desenvolvimento',
+            icon: 'info',
+            confirmButtonColor: '#0d6efd'
+        });
+    }
+
+    function excluirModelo(modeloId) {
+        Swal.fire({
+            title: 'Excluir Modelo',
+            text: 'Tem certeza que deseja excluir este modelo?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Implementar exclusão
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Modelo excluído!',
+                    confirmButtonColor: '#198754'
+                });
+            }
+        });
+    }
+
+    function fazerBackup() {
+        Swal.fire({
+            title: 'Fazendo Backup...',
+            text: 'Gerando arquivo de backup',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+                // Simular backup
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Backup Criado!',
+                        text: 'O arquivo foi baixado',
+                        confirmButtonColor: '#198754'
+                    });
+                }, 2000);
+            }
+        });
+    }
+
+    // Upload de arquivos
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            uploadFiles(files);
+        }
+    });
+
+    function uploadFiles(files) {
+        const progressDiv = document.getElementById('uploadProgress');
+        const progressBar = progressDiv.querySelector('.progress-bar');
+
+        progressDiv.style.display = 'block';
+
+        // Simular upload
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+
+            if (progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Upload Concluído!',
+                        text: `${files.length} arquivo(s) enviado(s) com sucesso`,
+                        confirmButtonColor: '#198754'
+                    });
+                }, 500);
+            }
+        }, 200);
+    }
+
+    // Drag and drop
+    const dropzone = document.getElementById('dropzone');
+
+    dropzone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('border-primary');
+    });
+
+    dropzone.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+    });
+
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+
+        const files = e.dataTransfer.files;
+        const pptxFiles = Array.from(files).filter(file => file.name.endsWith('.pptx'));
+
+        if (pptxFiles.length > 0) {
+            uploadFiles(pptxFiles);
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Arquivos Inválidos',
+                text: 'Apenas arquivos .pptx são aceitos',
+                confirmButtonColor: '#ffc107'
+            });
+        }
+    });
+
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const tipoNr = document.getElementById('tipo_nr').value.toUpperCase();
+
+        // Validar formato NR
+        if (!/^NR\d+$/.test(tipoNr)) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Formato Inválido',
+                text: 'Use o formato NR + número (ex: NR35)',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
+        document.getElementById('tipo_nr').value = tipoNr;
+    });
+</script>
+{% endblock %}

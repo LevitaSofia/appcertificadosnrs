@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar Certificados em Lote - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-layer-group me-2"></i>Gerar Certificados em Lote
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('processar_certificados_lote') }}">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo_nr" class="form-label">Tipo de NR *</label>
+                            <select class="form-select" id="tipo_nr" name="tipo_nr" required>
+                                <option value="">Selecione uma NR...</option>
+                                {% for modelo in modelos %}
+                                <option value="{{ modelo.tipo_nr }}">
+                                    {{ modelo.tipo_nr }} - {{ modelo.descricao }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo_treinamento" class="form-label">Tipo de Treinamento *</label>
+                            <select class="form-select" id="tipo_treinamento" name="tipo_treinamento" required>
+                                <option value="">Selecione o tipo...</option>
+                                <option value="Inicial">Treinamento Inicial</option>
+                                <option value="Reciclagem">Reciclagem</option>
+                                <option value="Atualização">Atualização</option>
+                                <option value="Complementar">Complementar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="data_emissao" class="form-label">Data de Emissão *</label>
+                            <input type="date" class="form-control" id="data_emissao" name="data_emissao"
+                                value="{{ data_hoje }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Funcionários para Certificar *</label>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                                <label class="form-check-label" for="selectAll">
+                                                    <strong>Selecionar Todos</strong>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                                <input type="text" class="form-control" id="searchFuncionarios"
+                                                    placeholder="Buscar funcionário...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                    {% if funcionarios %}
+                                    <div class="row">
+                                        {% for funcionario in funcionarios %}
+                                        <div class="col-md-6 col-lg-4 mb-2 funcionario-item">
+                                            <div class="form-check border rounded p-2">
+                                                <input class="form-check-input funcionario-checkbox" type="checkbox"
+                                                    name="funcionarios_ids" value="{{ funcionario.id }}"
+                                                    id="func{{ funcionario.id }}">
+                                                <label class="form-check-label w-100" for="func{{ funcionario.id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        {% if funcionario.foto %}
+                                                        <img src="{{ url_for('static', filename='imagens/' + funcionario.foto) }}"
+                                                            class="rounded-circle me-2" width="24" height="24">
+                                                        {% else %}
+                                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                                            style="width: 24px; height: 24px;">
+                                                            <i class="fas fa-user text-white small"></i>
+                                                        </div>
+                                                        {% endif %}
+                                                        <div>
+                                                            <div class="fw-bold">{{ funcionario.nome }}</div>
+                                                            <small class="text-muted">{{ funcionario.cpf }} - {{
+                                                                funcionario.funcao }}</small>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-users fa-2x mb-3"></i>
+                                        <p>Nenhum funcionário cadastrado</p>
+                                        <a href="{{ url_for('cadastrar_funcionario') }}" class="btn btn-primary">
+                                            Cadastrar Funcionário
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info" id="selectionInfo" style="display: none;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span id="selectedCount">0</span> funcionário(s) selecionado(s) para certificação
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar
+                        </a>
+                        <button type="button" class="btn btn-outline-warning me-md-2" id="btnPrevia">
+                            <i class="fas fa-eye me-1"></i>Visualizar Seleção
+                        </button>
+                        <button type="submit" class="btn btn-warning" id="btnGerar" disabled>
+                            <i class="fas fa-download me-1"></i>Gerar Certificados em Lote
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if funcionarios|length == 0 %}
+        <div class="alert alert-warning mt-4">
+            <h6><i class="fas fa-exclamation-triangle me-2"></i>Atenção!</h6>
+            <p>Você precisa cadastrar funcionários antes de gerar certificados.</p>
+            <a href="{{ url_for('cadastrar_funcionario') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Cadastrar Funcionário
+            </a>
+        </div>
+        {% endif %}
+
+        {% if modelos|length == 0 %}
+        <div class="alert alert-danger mt-4">
+            <h6><i class="fas fa-exclamation-circle me-2"></i>Erro!</h6>
+            <p>Nenhum modelo de NR foi configurado ainda.</p>
+            <a href="{{ url_for('configuracoes') }}" class="btn btn-primary">
+                <i class="fas fa-cog me-1"></i>Configurar Modelos
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6><i class="fas fa-info-circle text-info me-2"></i>Instruções para Geração em Lote:</h6>
+                <ol class="mb-0">
+                    <li>Escolha a NR e o tipo de treinamento que será aplicado a todos</li>
+                    <li>Defina a data de emissão dos certificados</li>
+                    <li>Selecione os funcionários que receberão o certificado</li>
+                    <li>Use a busca para encontrar funcionários específicos</li>
+                    <li>Verifique a seleção antes de processar</li>
+                    <li>Clique em "Gerar Certificados" para processar todos de uma vez</li>
+                </ol>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <small><i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Importante:</strong> A geração em lote pode demorar alguns minutos dependendo da
+                        quantidade de certificados.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Controlar seleção de funcionários
+    function atualizarContador() {
+        const checkboxes = document.querySelectorAll('.funcionario-checkbox:checked');
+        const count = checkboxes.length;
+
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('selectionInfo').style.display = count > 0 ? 'block' : 'none';
+        document.getElementById('btnGerar').disabled = count === 0;
+    }
+
+    // Selecionar/deselecionar todos
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.funcionario-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        atualizarContador();
+    });
+
+    // Atualizar contador quando checkboxes individuais mudarem
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('funcionario-checkbox')) {
+            atualizarContador();
+
+            // Atualizar estado do "Selecionar Todos"
+            const totalCheckboxes = document.querySelectorAll('.funcionario-checkbox').length;
+            const checkedCheckboxes = document.querySelectorAll('.funcionario-checkbox:checked').length;
+
+            const selectAllCheckbox = document.getElementById('selectAll');
+            selectAllCheckbox.checked = totalCheckboxes === checkedCheckboxes;
+            selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+        }
+    });
+
+    // Busca de funcionários
+    document.getElementById('searchFuncionarios').addEventListener('keyup', function () {
+        const searchTerm = this.value.toLowerCase();
+        const items = document.querySelectorAll('.funcionario-item');
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+        });
+    });
+
+    // Prévia da seleção
+    document.getElementById('btnPrevia').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll('.funcionario-checkbox:checked');
+        const tipoNr = document.getElementById('tipo_nr').value;
+        const tipoTreinamento = document.getElementById('tipo_treinamento').value;
+        const dataEmissao = document.getElementById('data_emissao').value;
+
+        if (checkboxes.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Nenhum Funcionário Selecionado',
+                text: 'Selecione pelo menos um funcionário para gerar certificados.',
+                confirmButtonColor: '#0d6efd'
+            });
+            return;
+        }
+
+        if (!tipoNr || !tipoTreinamento || !dataEmissao) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos Incompletos',
+                text: 'Preencha todos os campos antes de visualizar a prévia.',
+                confirmButtonColor: '#0d6efd'
+            });
+            return;
+        }
+
+        const funcionariosSelecionados = Array.from(checkboxes).map(cb => {
+            const label = cb.nextElementSibling;
+            return label.textContent.trim();
+        });
+
+        Swal.fire({
+            title: 'Prévia da Geração em Lote',
+            html: `
+            <div class="text-start">
+                <p><strong>NR:</strong> ${tipoNr}</p>
+                <p><strong>Treinamento:</strong> ${tipoTreinamento}</p>
+                <p><strong>Data:</strong> ${new Date(dataEmissao).toLocaleDateString('pt-BR')}</p>
+                <p><strong>Funcionários (${funcionariosSelecionados.length}):</strong></p>
+                <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 0.5rem;">
+                    ${funcionariosSelecionados.map(func => `<div class="small">${func}</div>`).join('')}
+                </div>
+            </div>
+        `,
+            icon: 'info',
+            confirmButtonText: 'Continuar com a Geração',
+            showCancelButton: true,
+            cancelButtonText: 'Voltar e Ajustar',
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.querySelector('form').submit();
+            }
+        });
+    });
+
+    // Definir data atual como padrão
+    document.addEventListener('DOMContentLoaded', function () {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data_emissao').value = hoje;
+    });
+
+    // Validação e loading do formulário
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const checkboxes = document.querySelectorAll('.funcionario-checkbox:checked');
+
+        if (checkboxes.length === 0) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Selecione pelo menos um funcionário.',
+                confirmButtonColor: '#0d6efd'
+            });
+            return;
+        }
+
+        const btnGerar = document.getElementById('btnGerar');
+        btnGerar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processando...';
+        btnGerar.disabled = true;
+
+        Swal.fire({
+            title: 'Gerando Certificados',
+            text: 'Por favor, aguarde. Isso pode demorar alguns minutos...',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    });
+</script>
+{% endblock %}

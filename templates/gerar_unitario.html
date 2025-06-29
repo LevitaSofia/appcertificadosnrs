@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar Certificado Unitário - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-certificate me-2"></i>Gerar Certificado Unitário
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('processar_certificado_unitario') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="funcionario_id" class="form-label">Funcionário *</label>
+                            <select class="form-select" id="funcionario_id" name="funcionario_id" required>
+                                <option value="">Selecione um funcionário...</option>
+                                {% for funcionario in funcionarios %}
+                                <option value="{{ funcionario.id }}">
+                                    {{ funcionario.nome }} - {{ funcionario.cpf }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo_nr" class="form-label">Tipo de NR *</label>
+                            <select class="form-select" id="tipo_nr" name="tipo_nr" required>
+                                <option value="">Selecione uma NR...</option>
+                                {% for modelo in modelos %}
+                                <option value="{{ modelo.tipo_nr }}">
+                                    {{ modelo.tipo_nr }} - {{ modelo.descricao }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo_treinamento" class="form-label">Tipo de Treinamento *</label>
+                            <select class="form-select" id="tipo_treinamento" name="tipo_treinamento" required>
+                                <option value="">Selecione o tipo...</option>
+                                <option value="Inicial">Treinamento Inicial</option>
+                                <option value="Reciclagem">Reciclagem</option>
+                                <option value="Atualização">Atualização</option>
+                                <option value="Complementar">Complementar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="data_emissao" class="form-label">Data de Emissão *</label>
+                            <input type="date" class="form-control" id="data_emissao" name="data_emissao"
+                                value="{{ data_hoje }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Prévia dos dados -->
+                    <div class="card bg-light mt-3" id="previa" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-eye me-2"></i>Prévia do Certificado</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Funcionário:</strong> <span id="prev-funcionario">-</span><br>
+                                    <strong>CPF:</strong> <span id="prev-cpf">-</span><br>
+                                    <strong>Função:</strong> <span id="prev-funcao">-</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>NR:</strong> <span id="prev-nr">-</span><br>
+                                    <strong>Treinamento:</strong> <span id="prev-treinamento">-</span><br>
+                                    <strong>Data:</strong> <span id="prev-data">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar
+                        </a>
+                        <button type="button" class="btn btn-outline-success me-md-2" id="btnPrevia">
+                            <i class="fas fa-eye me-1"></i>Visualizar Prévia
+                        </button>
+                        <button type="submit" class="btn btn-success" id="btnGerar">
+                            <i class="fas fa-download me-1"></i>Gerar e Baixar Certificado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if funcionarios|length == 0 %}
+        <div class="alert alert-warning mt-4">
+            <h6><i class="fas fa-exclamation-triangle me-2"></i>Atenção!</h6>
+            <p>Você precisa cadastrar funcionários antes de gerar certificados.</p>
+            <a href="{{ url_for('cadastrar_funcionario') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Cadastrar Funcionário
+            </a>
+        </div>
+        {% endif %}
+
+        {% if modelos|length == 0 %}
+        <div class="alert alert-danger mt-4">
+            <h6><i class="fas fa-exclamation-circle me-2"></i>Erro!</h6>
+            <p>Nenhum modelo de NR foi configurado ainda.</p>
+            <a href="{{ url_for('configuracoes') }}" class="btn btn-primary">
+                <i class="fas fa-cog me-1"></i>Configurar Modelos
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6><i class="fas fa-info-circle text-info me-2"></i>Instruções:</h6>
+                <ol class="mb-0">
+                    <li>Selecione o funcionário para o qual será gerado o certificado</li>
+                    <li>Escolha a NR (Norma Regulamentadora) apropriada</li>
+                    <li>Defina o tipo de treinamento realizado</li>
+                    <li>Confirme a data de emissão do certificado</li>
+                    <li>Use a prévia para conferir os dados antes de gerar</li>
+                    <li>Clique em "Gerar e Baixar" para criar o certificado</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Dados dos funcionários para usar no JavaScript
+    const funcionariosData = {
+    {% for funcionario in funcionarios %}
+    { { funcionario.id } }: {
+        nome: "{{ funcionario.nome }}",
+            cpf: "{{ funcionario.cpf }}",
+                funcao: "{{ funcionario.funcao }}"
+    } {% if not loop.last %}, {% endif %}
+    {% endfor %}
+};
+
+    // Dados dos modelos
+    const modelosData = {
+    {% for modelo in modelos %}
+    "{{ modelo.tipo_nr }}": "{{ modelo.descricao }}"{% if not loop.last %}, {% endif %}
+    {% endfor %}
+};
+
+    // Função para verificar se todos os campos estão preenchidos
+    function verificarCampos() {
+        const funcionarioId = document.getElementById('funcionario_id').value;
+        const tipoNr = document.getElementById('tipo_nr').value;
+        const tipoTreinamento = document.getElementById('tipo_treinamento').value;
+        const dataEmissao = document.getElementById('data_emissao').value;
+
+        const todosPreenchidos = funcionarioId && tipoNr && tipoTreinamento && dataEmissao;
+
+        // Habilitar/desabilitar botão baseado nos campos preenchidos
+        const btnGerar = document.getElementById('btnGerar');
+        btnGerar.disabled = !todosPreenchidos;
+
+        console.log('Campos verificados:', { funcionarioId, tipoNr, tipoTreinamento, dataEmissao, todosPreenchidos });
+
+        return todosPreenchidos;
+    }
+
+    // Atualizar prévia quando campos mudarem
+    function atualizarPrevia() {
+        const funcionarioId = document.getElementById('funcionario_id').value;
+        const tipoNr = document.getElementById('tipo_nr').value;
+        const tipoTreinamento = document.getElementById('tipo_treinamento').value;
+        const dataEmissao = document.getElementById('data_emissao').value;
+
+        if (funcionarioId && tipoNr && tipoTreinamento && dataEmissao) {
+            const funcionario = funcionariosData[funcionarioId];
+            const descricaoNr = modelosData[tipoNr];
+
+            if (funcionario) {
+                document.getElementById('prev-funcionario').textContent = funcionario.nome;
+                document.getElementById('prev-cpf').textContent = funcionario.cpf;
+                document.getElementById('prev-funcao').textContent = funcionario.funcao;
+                document.getElementById('prev-nr').textContent = `${tipoNr} - ${descricaoNr}`;
+                document.getElementById('prev-treinamento').textContent = tipoTreinamento;
+                document.getElementById('prev-data').textContent = new Date(dataEmissao).toLocaleDateString('pt-BR');
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Event listeners
+    document.getElementById('funcionario_id').addEventListener('change', function () {
+        verificarCampos();
+        atualizarPrevia();
+    });
+    document.getElementById('tipo_nr').addEventListener('change', function () {
+        verificarCampos();
+        atualizarPrevia();
+    });
+    document.getElementById('tipo_treinamento').addEventListener('change', function () {
+        verificarCampos();
+        atualizarPrevia();
+    });
+    document.getElementById('data_emissao').addEventListener('change', function () {
+        verificarCampos();
+        atualizarPrevia();
+    });
+
+    document.getElementById('btnPrevia').addEventListener('click', function () {
+        if (atualizarPrevia()) {
+            document.getElementById('previa').style.display = 'block';
+            this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos Incompletos',
+                text: 'Por favor, preencha todos os campos para visualizar a prévia.',
+                confirmButtonColor: '#0d6efd'
+            });
+        }
+    });
+
+    // Definir data atual como padrão
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Página carregada, configurando campos...');
+
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data_emissao').value = hoje;
+
+        // Forçar habilitação do botão para teste
+        const btnGerar = document.getElementById('btnGerar');
+        console.log('Botão encontrado:', btnGerar);
+
+        // Verificar campos após carregar a página
+        setTimeout(function () {
+            console.log('Executando verificação de campos...');
+            verificarCampos();
+            atualizarPrevia();
+
+            // Força habilitar o botão se todos os campos estiverem preenchidos
+            const funcionarioId = document.getElementById('funcionario_id').value;
+            const tipoNr = document.getElementById('tipo_nr').value;
+            const tipoTreinamento = document.getElementById('tipo_treinamento').value;
+            const dataEmissao = document.getElementById('data_emissao').value;
+
+            if (funcionarioId && tipoNr && tipoTreinamento && dataEmissao) {
+                btnGerar.disabled = false;
+                console.log('Botão habilitado forçadamente!');
+            }
+        }, 500);
+    });
+
+    // Validação antes de submeter
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const btnGerar = document.getElementById('btnGerar');
+        btnGerar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Gerando...';
+        btnGerar.disabled = true;
+
+        // Se houver erro, reabilitar o botão
+        setTimeout(() => {
+            btnGerar.innerHTML = '<i class="fas fa-download me-1"></i>Gerar e Baixar Certificado';
+            btnGerar.disabled = false;
+        }, 10000);
+    });
+</script>
+{% endblock %}

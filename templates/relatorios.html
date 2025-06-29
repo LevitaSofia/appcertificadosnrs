@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar me-2"></i>Relatórios e Estatísticas</h2>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-primary" onclick="exportarRelatorio()">
+            <i class="fas fa-download me-1"></i>Exportar
+        </button>
+        <button type="button" class="btn btn-outline-info" onclick="atualizarDados()">
+            <i class="fas fa-sync-alt me-1"></i>Atualizar
+        </button>
+    </div>
+</div>
+
+<!-- Cards de estatísticas -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_funcionarios }}</h4>
+                        <p class="card-text">Funcionários</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_certificados }}</h4>
+                        <p class="card-text">Certificados</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-certificate fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ certificados_por_nr|length }}</h4>
+                        <p class="card-text">Tipos de NR</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-layer-group fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">
+                            {% if total_funcionarios > 0 %}
+                            {{ "%.1f"|format((total_certificados / total_funcionarios)) }}
+                            {% else %}
+                            0
+                            {% endif %}
+                        </h4>
+                        <p class="card-text">Média por Funcionário</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de certificados por NR -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Certificados por NR</h5>
+            </div>
+            <div class="card-body">
+                {% if certificados_por_nr %}
+                <canvas id="chartCertificadosPorNR" width="400" height="300"></canvas>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                    <p>Nenhum certificado gerado ainda</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de certificados por NR -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Detalhamento por NR</h5>
+            </div>
+            <div class="card-body">
+                {% if certificados_por_nr %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>NR</th>
+                                <th class="text-center">Quantidade</th>
+                                <th class="text-center">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cert_nr in certificados_por_nr %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ cert_nr.tipo_nr }}</span>
+                                </td>
+                                <td class="text-center">{{ cert_nr.total }}</td>
+                                <td class="text-center">
+                                    {{ "%.1f"|format((cert_nr.total / total_certificados * 100)) }}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>Nenhum certificado encontrado</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Últimos certificados gerados -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Últimos Certificados Gerados</h5>
+            </div>
+            <div class="card-body">
+                {% if ultimos_certificados %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>NR</th>
+                                <th>Tipo Treinamento</th>
+                                <th>Data Emissão</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for certificado, funcionario in ultimos_certificados %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if funcionario.foto %}
+                                        <img src="{{ url_for('static', filename='imagens/' + funcionario.foto) }}"
+                                            class="rounded-circle me-2" width="32" height="32">
+                                        {% else %}
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ funcionario.nome }}</strong>
+                                            <br><small class="text-muted">{{ funcionario.cpf }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ certificado.tipo_nr }}</span>
+                                </td>
+                                <td>{{ certificado.tipo_treinamento }}</td>
+                                <td>{{ certificado.data_emissao.strftime('%d/%m/%Y') }}</td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="baixarCertificado('{{ certificado.caminho_arquivo }}')"
+                                        title="Baixar Certificado">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-certificate fa-3x mb-3"></i>
+                    <h5>Nenhum certificado gerado ainda</h5>
+                    <p>Comece gerando seu primeiro certificado</p>
+                    <a href="{{ url_for('gerar_unitario') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Gerar Certificado
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros avançados -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filtros Avançados
+                    <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#filtrosAvancados">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </h6>
+            </div>
+            <div class="collapse" id="filtrosAvancados">
+                <div class="card-body">
+                    <form id="formFiltros">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Data Início</label>
+                                <input type="date" class="form-control" id="dataInicio">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Data Fim</label>
+                                <input type="date" class="form-control" id="dataFim">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Tipo NR</label>
+                                <select class="form-select" id="filtroNR">
+                                    <option value="">Todas as NRs</option>
+                                    {% for cert_nr in certificados_por_nr %}
+                                    <option value="{{ cert_nr.tipo_nr }}">{{ cert_nr.tipo_nr }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Funcionário</label>
+                                <input type="text" class="form-control" id="filtroFuncionario"
+                                    placeholder="Nome ou CPF">
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-outline-secondary me-md-2" onclick="limparFiltros()">
+                                <i class="fas fa-eraser me-1"></i>Limpar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Aplicar Filtros
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Dados para o gráfico
+    const dadosCertificados = {
+        labels: [
+            {% for cert_nr in certificados_por_nr %}
+    '{{ cert_nr.tipo_nr }}'{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    ],
+    datasets: [{
+        data: [
+            {% for cert_nr in certificados_por_nr %}
+            {{ cert_nr.total }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+        ],
+    backgroundColor: [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+    ]
+    }]
+};
+
+    // Criar gráfico se há dados
+    {% if certificados_por_nr %}
+    const ctx = document.getElementById('chartCertificadosPorNR').getContext('2d');
+    const chartCertificados = new Chart(ctx, {
+        type: 'doughnut',
+        data: dadosCertificados,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    {% endif %}
+
+    // Funções auxiliares
+    function exportarRelatorio() {
+        Swal.fire({
+            title: 'Exportar Relatório',
+            text: 'Funcionalidade em desenvolvimento',
+            icon: 'info',
+            confirmButtonColor: '#0d6efd'
+        });
+    }
+
+    function atualizarDados() {
+        Swal.fire({
+            title: 'Atualizando...',
+            text: 'Recarregando dados do relatório',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        });
+    }
+
+    function baixarCertificado(caminho) {
+        // Implementar download do certificado
+        window.open(`/download_certificado?caminho=${encodeURIComponent(caminho)}`, '_blank');
+    }
+
+    function limparFiltros() {
+        document.getElementById('formFiltros').reset();
+    }
+
+    // Aplicar filtros
+    document.getElementById('formFiltros').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Coletar dados dos filtros
+        const filtros = {
+            dataInicio: document.getElementById('dataInicio').value,
+            dataFim: document.getElementById('dataFim').value,
+            tipoNR: document.getElementById('filtroNR').value,
+            funcionario: document.getElementById('filtroFuncionario').value
+        };
+
+        // Implementar aplicação de filtros
+        console.log('Filtros aplicados:', filtros);
+
+        Swal.fire({
+            title: 'Filtros Aplicados',
+            text: 'Funcionalidade de filtros em desenvolvimento',
+            icon: 'info',
+            confirmButtonColor: '#0d6efd'
+        });
+    });
+</script>
+{% endblock %}

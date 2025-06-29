@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Início - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-certificate me-3"></i>Sistema de Certificados NR
+            </h1>
+            <p class="lead">Geração automática e profissional de certificados de Normas Regulamentadoras</p>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
+            <p>Cadastre funcionários, configure modelos e gere certificados em massa com facilidade.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Card Funcionários -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-users text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Funcionários</h5>
+                <p class="card-text">{{ funcionarios|length }} funcionários cadastrados</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('funcionarios') }}" class="btn btn-outline-primary">Ver Todos</a>
+                    <a href="{{ url_for('cadastrar_funcionario') }}" class="btn btn-primary">Cadastrar Novo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Gerar Unitário -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-certificate text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Certificado Unitário</h5>
+                <p class="card-text">Gere um certificado individual</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('gerar_unitario') }}" class="btn btn-success">Gerar Agora</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Gerar em Lote -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-layer-group text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Certificados em Lote</h5>
+                <p class="card-text">Gere múltiplos certificados</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('gerar_lote') }}" class="btn btn-warning">Gerar Lote</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Relatórios -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-chart-bar text-info" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Relatórios</h5>
+                <p class="card-text">Visualize estatísticas</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('relatorios') }}" class="btn btn-info">Ver Relatórios</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Modelos de NR Disponíveis
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if modelos %}
+                <div class="row">
+                    {% for modelo in modelos %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-start border-primary border-4">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">{{ modelo.tipo_nr }}</h6>
+                                <p class="card-text small">{{ modelo.descricao }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <p>Nenhum modelo configurado ainda.</p>
+                    <a href="{{ url_for('configuracoes') }}" class="btn btn-primary">Configurar Modelos</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Como usar o sistema:</h6>
+            <ol class="mb-0">
+                <li><strong>Cadastre funcionários</strong> com suas informações básicas</li>
+                <li><strong>Configure os modelos</strong> de PowerPoint para cada NR</li>
+                <li><strong>Gere certificados</strong> unitários ou em lote</li>
+                <li><strong>Acompanhe</strong> através dos relatórios</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
