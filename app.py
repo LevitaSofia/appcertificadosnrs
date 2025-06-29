@@ -475,7 +475,8 @@ def importar_funcionarios():
                 'data_nascimento': '12/01/1980',
                 'telefone': '11 94870-7283',
                 'email': 'andrealtatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Técnico de Segurança'
             },
             {
                 'nome': 'BRUNO PINHEIRO DE LIMA',
@@ -483,7 +484,8 @@ def importar_funcionarios():
                 'data_nascimento': '27/04/1990',
                 'telefone': '11 95273-9404',
                 'email': 'brunoaltatelas@gmail.com',
-                'senha': 'Alta972600#'
+                'senha': 'Alta972600#',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'CAIO VINICIUS PAES DO NASCIMENTO',
@@ -491,7 +493,8 @@ def importar_funcionarios():
                 'data_nascimento': '30/05/1991',
                 'telefone': '11 95487-5236',
                 'email': '',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'CARLOS ALBERTO DOS SANTOS',
@@ -499,7 +502,8 @@ def importar_funcionarios():
                 'data_nascimento': '21/11/1978',
                 'telefone': '16 98865-1612',
                 'email': 'carlosaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Supervisor de Instalação'
             },
             {
                 'nome': 'CLEUTON CLEBER VIEIRA ROMANO',
@@ -507,7 +511,8 @@ def importar_funcionarios():
                 'data_nascimento': '05/12/1979',
                 'telefone': '19 990058626',
                 'email': 'cleutonaltatelas@gmail.com',
-                'senha': 'Alta972600#'
+                'senha': 'Alta972600#',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'DIOGO PEREIRA CARDOSO',
@@ -515,7 +520,8 @@ def importar_funcionarios():
                 'data_nascimento': '30/12/1991',
                 'telefone': '16 98103-7258',
                 'email': 'diogoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'EDERSON GONÇALVES VIEIRA DA SILVA',
@@ -523,7 +529,8 @@ def importar_funcionarios():
                 'data_nascimento': '10/09/1999',
                 'telefone': '16 99430-4340',
                 'email': 'edersongonsalvesaltatelas@gmail.com',
-                'senha': 'Alta972600'
+                'senha': 'Alta972600',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'ERDESSON QUIRINO DE LIMA',
@@ -531,7 +538,8 @@ def importar_funcionarios():
                 'data_nascimento': '17/10/1988',
                 'telefone': '16 98192-4980',
                 'email': 'erdersonaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'EVERTON SAMPAIO MELO DA COSTA',
@@ -539,7 +547,8 @@ def importar_funcionarios():
                 'data_nascimento': '14/01/1976',
                 'telefone': '11 96917-5480',
                 'email': 'evertonaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Supervisor de Instalação'
             },
             {
                 'nome': 'FELIPE ARAUJO DOS SANTOS',
@@ -547,7 +556,8 @@ def importar_funcionarios():
                 'data_nascimento': '13/03/2003',
                 'telefone': '16 99292-3212',
                 'email': 'felipealtatelas@gmail.com',
-                'senha': 'Alta972600'
+                'senha': 'Alta972600',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'FERNANDO SILVA DE SOUZA',
@@ -555,7 +565,8 @@ def importar_funcionarios():
                 'data_nascimento': '25/01/1989',
                 'telefone': '16 99278-2701',
                 'email': 'fernandoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'FILIPE DELFINO',
@@ -563,7 +574,8 @@ def importar_funcionarios():
                 'data_nascimento': '07/05/1987',
                 'telefone': '16 99261-7738',
                 'email': 'filipedelfinoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'GABRIEL JACKSON PEIXOTO RIBEIRO',
@@ -571,7 +583,8 @@ def importar_funcionarios():
                 'data_nascimento': '08/07/1996',
                 'telefone': '16 99361-7195',
                 'email': 'gabrielaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'GUSTAVO ADOLFO CASTANEDA CARDENAS',
@@ -579,7 +592,8 @@ def importar_funcionarios():
                 'data_nascimento': '23/12/1986',
                 'telefone': '11 96293-9343',
                 'email': 'gustavoaltatelas@gmail.com',
-                'senha': 'Alta972600@'
+                'senha': 'Alta972600@',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'JARDIEL NUNES DA SILVA',
@@ -587,7 +601,8 @@ def importar_funcionarios():
                 'data_nascimento': '13/09/2000',
                 'telefone': '16 98191-9551',
                 'email': 'jardielaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'JUNIEL DE SOUSA',
@@ -595,7 +610,8 @@ def importar_funcionarios():
                 'data_nascimento': '07/09/1984',
                 'telefone': '16 99204-7416',
                 'email': 'junielaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'KAIQUE DE OLIVEIRA SANTOS',
@@ -603,7 +619,8 @@ def importar_funcionarios():
                 'data_nascimento': '02/12/1997',
                 'telefone': '16 99447-8913',
                 'email': 'kaiquealtatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'LEANDRO RODRIGUES DE SOUZA',
@@ -611,7 +628,8 @@ def importar_funcionarios():
                 'data_nascimento': '26/07/1987',
                 'telefone': '16 99396-5158',
                 'email': 'leandroaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'LEONARDO DOUGLAS DE OLIVEIRA CORREA',
@@ -619,7 +637,8 @@ def importar_funcionarios():
                 'data_nascimento': '05/03/2003',
                 'telefone': '11 93397-5926',
                 'email': 'leonardoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'LUCAS EDUARDO RIBEIRO FRANÇA E SILVA',
@@ -627,7 +646,8 @@ def importar_funcionarios():
                 'data_nascimento': '27/10/2006',
                 'telefone': '16 98836-9753',
                 'email': 'lucasaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Menor Aprendiz'
             },
             {
                 'nome': 'LUCIANO DE JESUS',
@@ -635,7 +655,8 @@ def importar_funcionarios():
                 'data_nascimento': '06/11/1975',
                 'telefone': '16 99754-1563',
                 'email': 'lucianoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Supervisor de Instalação'
             },
             {
                 'nome': 'LUIS HENRIQUE ROCETTI DA SILVA',
@@ -643,7 +664,8 @@ def importar_funcionarios():
                 'data_nascimento': '08/03/1992',
                 'telefone': '16 99649-4762',
                 'email': 'luisaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'MAICON DOUGLAS DOS SANTOS INFORZATO',
@@ -651,7 +673,8 @@ def importar_funcionarios():
                 'data_nascimento': '01/05/1993',
                 'telefone': '16 98152-5822',
                 'email': 'maiconaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'MATHEUS SOUSA COSTA',
@@ -659,7 +682,8 @@ def importar_funcionarios():
                 'data_nascimento': '01/12/2001',
                 'telefone': '16 99111-6444',
                 'email': 'matheusaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'MOEMIA COSTA DE OLIVEIRA',
@@ -667,7 +691,8 @@ def importar_funcionarios():
                 'data_nascimento': '05/02/1987',
                 'telefone': '11 96150-8453',
                 'email': 'moemia.costa@altatelas.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Assistente Administrativo'
             },
             {
                 'nome': 'PABLO HENRIQUE RIBEIRO FRIZI',
@@ -675,7 +700,8 @@ def importar_funcionarios():
                 'data_nascimento': '22/12/2007',
                 'telefone': '16 99449-1102',
                 'email': 'pabloaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Menor Aprendiz'
             },
             {
                 'nome': 'PAULO FERREIRA CARDOSO',
@@ -683,7 +709,8 @@ def importar_funcionarios():
                 'data_nascimento': '27/10/1997',
                 'telefone': '16 99715-6763',
                 'email': 'pauloaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'RAFAEL DE SOUZA COSTA',
@@ -691,7 +718,8 @@ def importar_funcionarios():
                 'data_nascimento': '09/05/2005',
                 'telefone': '89 9421-1070',
                 'email': 'rafaelaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Menor Aprendiz'
             },
             {
                 'nome': 'RODRIGO APARECIDO COELHO PAULISTA',
@@ -699,7 +727,8 @@ def importar_funcionarios():
                 'data_nascimento': '02/12/1982',
                 'telefone': '16 99627-3207',
                 'email': 'rodrigoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'RONALDO HENRIQUE DO CARMO',
@@ -707,7 +736,8 @@ def importar_funcionarios():
                 'data_nascimento': '14/09/1986',
                 'telefone': '16 98846-2058',
                 'email': 'ronaldoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'VICTOR HUGO VIANA GARCEZ',
@@ -715,7 +745,8 @@ def importar_funcionarios():
                 'data_nascimento': '15/09/2000',
                 'telefone': '16 99307-5592',
                 'email': 'victorhugoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'VITOR BRENO DE SOUZA ARAUJO',
@@ -723,7 +754,8 @@ def importar_funcionarios():
                 'data_nascimento': '15/09/2001',
                 'telefone': '16 98187-3464',
                 'email': 'vitorbrenoaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             },
             {
                 'nome': 'WAGNER ZAMBONI',
@@ -731,7 +763,8 @@ def importar_funcionarios():
                 'data_nascimento': '17/08/1980',
                 'telefone': '16 99722-6712',
                 'email': 'wagneraltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Supervisor de Instalação'
             },
             {
                 'nome': 'WENDEL HENRIQUE ANTONIO DA SILVA',
@@ -739,7 +772,8 @@ def importar_funcionarios():
                 'data_nascimento': '09/12/1998',
                 'telefone': '16 99166-2527',
                 'email': 'wendelaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Instalador de Telas'
             },
             {
                 'nome': 'WILLIAM RODRIGUES DA SILVA',
@@ -747,7 +781,8 @@ def importar_funcionarios():
                 'data_nascimento': '16/03/2001',
                 'telefone': '16 99650-8192',
                 'email': 'williamaltatelas@gmail.com',
-                'senha': 'Alta972600$'
+                'senha': 'Alta972600$',
+                'funcao': 'Auxiliar de Instalação'
             }
         ]
 
@@ -779,7 +814,7 @@ def importar_funcionarios():
                     telefone=func_data['telefone'],
                     email=func_data['email'] if func_data['email'] else None,
                     senha=func_data['senha'],
-                    funcao='Funcionário',  # Função padrão
+                    funcao=func_data.get('funcao', 'Instalador de Telas'),  # Usar função específica ou padrão
                     data_admissao=datetime.now().date()  # Data atual como admissão
                 )
 
