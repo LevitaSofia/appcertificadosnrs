@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
@@ -8,6 +8,8 @@ import re
 from werkzeug.utils import secure_filename
 import sqlite3
 import comtypes.client
+import mimetypes
+from werkzeug.exceptions import NotFound
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua-chave-secreta-aqui'
@@ -15,9 +17,20 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificados.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/imagens'
 app.config['VIDEOS_FOLDER'] = 'static/videos'
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB máximo por arquivo
+app.config['MAX_CONTENT_LENGTH'] = 500 * \
+    1024 * 1024  # 500MB máximo por arquivo
 
 db = SQLAlchemy(app)
+
+# Filtros Jinja2 personalizados
+
+
+@app.template_filter('basename')
+def basename_filter(filepath):
+    """Extrai o nome do arquivo de um caminho completo"""
+    if not filepath:
+        return ''
+    return os.path.basename(filepath)
 
 # Modelos do Banco de Dados
 
@@ -666,31 +679,35 @@ def api_cargos():
 # ==================== CENTRAL DE TREINAMENTOS ====================
 
 @app.route('/treinamentos')
-def treinamentos():
-    """Página principal da central de treinamentos"""
-    treinamentos = Treinamento.query.filter_by(ativo=True).order_by(Treinamento.data_criacao.desc()).all()
-    modelos_nr = ModeloNR.query.all()
-    
-    # Agrupar treinamentos por NR
-    treinamentos_por_nr = {}
-    for treinamento in treinamentos:
-        if treinamento.tipo_nr not in treinamentos_por_nr:
-            treinamentos_por_nr[treinamento.tipo_nr] = []
-        treinamentos_por_nr[treinamento.tipo_nr].append(treinamento)
-    
-    return render_template('treinamentos.html', 
-                         treinamentos_por_nr=treinamentos_por_nr,
-                         modelos_nr=modelos_nr)
+def modulos_treinamento():
+    """Página que exibe os módulos de NR disponíveis."""
+    modulos = db.session.query(Treinamento.tipo_nr).distinct().order_by(
+        Treinamento.tipo_nr).all()
+    # Extrai os nomes dos módulos da tupla
+    modulos_lista = [m[0] for m in modulos]
+    return render_template('modulos_treinamento.html', modulos=modulos_lista)
+
+
+@app.route('/treinamentos/<string:tipo_nr>')
+def treinamentos_por_modulo(tipo_nr):
+    """Página que exibe os treinamentos de um módulo de NR específico."""
+    treinamentos = Treinamento.query.filter_by(
+        tipo_nr=tipo_nr, ativo=True).order_by(Treinamento.titulo).all()
+    if not treinamentos:
+        flash(
+            f'Nenhum treinamento ativo encontrado para o módulo {tipo_nr}.', 'warning')
+    return render_template('treinamentos_por_modulo.html', treinamentos=treinamentos, modulo_nr=tipo_nr)
 
 
 @app.route('/treinamentos/admin')
 def treinamentos_admin():
     """Página administrativa para gerenciar treinamentos"""
-    treinamentos = Treinamento.query.order_by(Treinamento.data_criacao.desc()).all()
+    treinamentos = Treinamento.query.order_by(
+        Treinamento.data_criacao.desc()).all()
     modelos_nr = ModeloNR.query.all()
-    return render_template('treinamentos_admin.html', 
-                         treinamentos=treinamentos,
-                         modelos_nr=modelos_nr)
+    return render_template('treinamentos_admin.html',
+                           treinamentos=treinamentos,
+                           modelos_nr=modelos_nr)
 
 
 @app.route('/treinamentos/upload', methods=['POST'])
@@ -702,40 +719,42 @@ def upload_treinamento():
         tipo_nr = request.form['tipo_nr']
         duracao_minutos = request.form.get('duracao_minutos', type=int)
         obrigatorio = 'obrigatorio' in request.form
-        
+
         if not titulo or not tipo_nr:
             flash('Título e Tipo de NR são obrigatórios!', 'error')
             return redirect(url_for('treinamentos_admin'))
-        
+
         # Verificar se arquivo foi enviado
         if 'arquivo_video' not in request.files:
             flash('Nenhum arquivo de vídeo selecionado!', 'error')
             return redirect(url_for('treinamentos_admin'))
-        
+
         arquivo = request.files['arquivo_video']
         if arquivo.filename == '':
             flash('Nenhum arquivo selecionado!', 'error')
             return redirect(url_for('treinamentos_admin'))
-        
+
         # Validar extensão do arquivo
-        extensoes_permitidas = {'.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm'}
+        extensoes_permitidas = {'.mp4', '.avi',
+                                '.mov', '.wmv', '.mkv', '.webm'}
         if not any(arquivo.filename.lower().endswith(ext) for ext in extensoes_permitidas):
-            flash('Formato de vídeo não suportado! Use: MP4, AVI, MOV, WMV, MKV ou WEBM', 'error')
+            flash(
+                'Formato de vídeo não suportado! Use: MP4, AVI, MOV, WMV, MKV ou WEBM', 'error')
             return redirect(url_for('treinamentos_admin'))
-        
+
         # Criar pasta de vídeos se não existir
         videos_dir = os.path.join('static', 'videos')
         os.makedirs(videos_dir, exist_ok=True)
-        
+
         # Gerar nome único para o arquivo
         nome_arquivo = secure_filename(arquivo.filename)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         nome_arquivo = f"{timestamp}_{nome_arquivo}"
         caminho_arquivo = os.path.join(videos_dir, nome_arquivo)
-        
+
         # Salvar arquivo
         arquivo.save(caminho_arquivo)
-        
+
         # Criar registro no banco
         treinamento = Treinamento(
             titulo=titulo,
@@ -745,13 +764,13 @@ def upload_treinamento():
             arquivo_video=caminho_arquivo,
             obrigatorio=obrigatorio
         )
-        
+
         db.session.add(treinamento)
         db.session.commit()
-        
+
         flash(f'Treinamento "{titulo}" adicionado com sucesso!', 'success')
         return redirect(url_for('treinamentos_admin'))
-        
+
     except Exception as e:
         flash(f'Erro ao fazer upload: {str(e)}', 'error')
         return redirect(url_for('treinamentos_admin'))
@@ -761,21 +780,24 @@ def upload_treinamento():
 def editar_treinamento(treinamento_id):
     """Editar treinamento existente"""
     treinamento = Treinamento.query.get_or_404(treinamento_id)
-    
+
     try:
         treinamento.titulo = request.form['titulo'].strip()
-        treinamento.descricao = request.form.get('descricao', '').strip() or None
+        treinamento.descricao = request.form.get(
+            'descricao', '').strip() or None
         treinamento.tipo_nr = request.form['tipo_nr']
-        treinamento.duracao_minutos = request.form.get('duracao_minutos', type=int)
+        treinamento.duracao_minutos = request.form.get(
+            'duracao_minutos', type=int)
         treinamento.obrigatorio = 'obrigatorio' in request.form
         treinamento.data_atualizacao = datetime.now()
-        
+
         db.session.commit()
-        flash(f'Treinamento "{treinamento.titulo}" atualizado com sucesso!', 'success')
-        
+        flash(
+            f'Treinamento "{treinamento.titulo}" atualizado com sucesso!', 'success')
+
     except Exception as e:
         flash(f'Erro ao atualizar: {str(e)}', 'error')
-    
+
     return redirect(url_for('treinamentos_admin'))
 
 
@@ -783,27 +805,30 @@ def editar_treinamento(treinamento_id):
 def excluir_treinamento(treinamento_id):
     """Excluir/desativar treinamento"""
     treinamento = Treinamento.query.get_or_404(treinamento_id)
-    
+
     try:
         # Verificar se há progresso de funcionários
-        progresso_count = ProgressoTreinamento.query.filter_by(treinamento_id=treinamento_id).count()
-        
+        progresso_count = ProgressoTreinamento.query.filter_by(
+            treinamento_id=treinamento_id).count()
+
         if progresso_count > 0:
             # Desativar ao invés de excluir se há progresso
             treinamento.ativo = False
-            flash(f'Treinamento "{treinamento.titulo}" foi desativado (há progresso de funcionários).', 'warning')
+            flash(
+                f'Treinamento "{treinamento.titulo}" foi desativado (há progresso de funcionários).', 'warning')
         else:
             # Excluir arquivo e registro se não há progresso
             if os.path.exists(treinamento.arquivo_video):
                 os.remove(treinamento.arquivo_video)
             db.session.delete(treinamento)
-            flash(f'Treinamento "{treinamento.titulo}" excluído com sucesso!', 'success')
-        
+            flash(
+                f'Treinamento "{treinamento.titulo}" excluído com sucesso!', 'success')
+
         db.session.commit()
-        
+
     except Exception as e:
         flash(f'Erro ao excluir: {str(e)}', 'error')
-    
+
     return redirect(url_for('treinamentos_admin'))
 
 
@@ -811,17 +836,17 @@ def excluir_treinamento(treinamento_id):
 def assistir_treinamento(treinamento_id):
     """Página para assistir um treinamento específico"""
     treinamento = Treinamento.query.get_or_404(treinamento_id)
-    
+
     # Por enquanto, vamos simular um funcionário logado (ID = 1)
     # Em produção, isso viria da sessão do usuário
     funcionario_id = 1  # TEMPORÁRIO - substituir por sessão real
-    
+
     # Buscar ou criar progresso
     progresso = ProgressoTreinamento.query.filter_by(
         funcionario_id=funcionario_id,
         treinamento_id=treinamento_id
     ).first()
-    
+
     if not progresso:
         progresso = ProgressoTreinamento(
             funcionario_id=funcionario_id,
@@ -829,10 +854,10 @@ def assistir_treinamento(treinamento_id):
         )
         db.session.add(progresso)
         db.session.commit()
-    
-    return render_template('assistir_treinamento.html', 
-                         treinamento=treinamento,
-                         progresso=progresso)
+
+    return render_template('assistir_treinamento.html',
+                           treinamento=treinamento,
+                           progresso=progresso)
 
 
 @app.route('/treinamentos/progresso/<int:treinamento_id>', methods=['POST'])
@@ -842,28 +867,28 @@ def atualizar_progresso(treinamento_id):
         funcionario_id = 1  # TEMPORÁRIO - substituir por sessão real
         tempo_assistido = request.json.get('tempo_assistido', 0)
         progresso_percent = request.json.get('progresso_percent', 0)
-        
+
         progresso = ProgressoTreinamento.query.filter_by(
             funcionario_id=funcionario_id,
             treinamento_id=treinamento_id
         ).first()
-        
+
         if progresso:
             progresso.tempo_assistido_segundos = tempo_assistido
             progresso.progresso_percent = progresso_percent
             progresso.data_ultima_visualizacao = datetime.now()
-            
+
             # Marcar como concluído se progresso >= 90%
             if progresso_percent >= 90 and not progresso.concluido:
                 progresso.concluido = True
                 progresso.data_conclusao = datetime.now()
-            
+
             db.session.commit()
-            
+
             return jsonify({'status': 'success', 'concluido': progresso.concluido})
-        
+
         return jsonify({'status': 'error', 'message': 'Progresso não encontrado'})
-        
+
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
@@ -1321,6 +1346,134 @@ def criar_tabelas():
             db.session.add(cargo)
 
     db.session.commit()
+
+
+# ==================== ROTA PARA SERVIR VÍDEOS ====================
+
+@app.route('/video/<path:filename>')
+def serve_video(filename):
+    """Servir vídeos com suporte a streaming e Range requests"""
+    print(f"SERVE_VIDEO CHAMADA COM: {filename}")
+    try:
+        # Limpar o nome do arquivo para evitar problemas
+        filename = secure_filename(filename)
+        video_path = os.path.join('static', 'videos', filename)
+
+        print(f"Tentando servir vídeo: {video_path}")
+        print(f"Arquivo existe: {os.path.exists(video_path)}")
+
+        if not os.path.exists(video_path):
+            print(f"Arquivo não encontrado: {video_path}")
+            raise NotFound()
+
+        # Detectar tipo MIME
+        mime_type, _ = mimetypes.guess_type(video_path)
+        if not mime_type:
+            mime_type = 'video/mp4'
+
+        print(f"MIME type: {mime_type}")
+        file_size = os.path.getsize(video_path)
+        print(f"Tamanho do arquivo: {file_size} bytes")
+
+        # Verificar se é uma requisição de Range
+        range_header = request.headers.get('Range')
+        print(f"Range header: {range_header}")
+
+        if range_header:
+            # Parse do header Range
+            range_match = re.search(r'bytes=(\d+)-(\d*)', range_header)
+            if range_match:
+                start = int(range_match.group(1))
+                end = int(range_match.group(2)) if range_match.group(
+                    2) else file_size - 1
+
+                # Garantir que end não ultrapasse o tamanho do arquivo
+                end = min(end, file_size - 1)
+                print(f"Servindo range: {start}-{end}")
+
+                def generate():
+                    with open(video_path, 'rb') as f:
+                        f.seek(start)
+                        remaining = end - start + 1
+
+                        while remaining > 0:
+                            chunk_size = min(8192, remaining)
+                            chunk = f.read(chunk_size)
+                            if not chunk:
+                                break
+                            yield chunk
+                            remaining -= len(chunk)
+
+                response = Response(
+                    generate(),
+                    206,  # Partial Content
+                    headers={
+                        'Content-Type': mime_type,
+                        'Accept-Ranges': 'bytes',
+                        'Content-Range': f'bytes {start}-{end}/{file_size}',
+                        'Content-Length': str(end - start + 1),
+                        'Cache-Control': 'no-cache'
+                    }
+                )
+                return response
+
+        # Resposta normal (arquivo completo)
+        print("Servindo arquivo completo")
+        return send_file(
+            video_path,
+            mimetype=mime_type,
+            as_attachment=False,
+            download_name=filename
+        )
+
+    except Exception as e:
+        print(f"Erro ao servir vídeo {filename}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise NotFound()
+
+
+# ==================== ROTA PARA DEBUG DE VÍDEOS ====================
+
+@app.route('/debug/videos')
+def debug_videos():
+    """Debug: listar todos os vídeos disponíveis"""
+    videos_dir = os.path.join('static', 'videos')
+    videos = []
+
+    if os.path.exists(videos_dir):
+        for filename in os.listdir(videos_dir):
+            if filename.lower().endswith(('.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm')):
+                filepath = os.path.join(videos_dir, filename)
+                size = os.path.getsize(filepath)
+                videos.append({
+                    'filename': filename,
+                    'size': f"{size / (1024*1024):.1f} MB",
+                    'url': url_for('serve_video', filename=filename)
+                })
+
+    # Debug dos treinamentos no banco
+    treinamentos = Treinamento.query.all()
+
+    debug_info = {
+        'videos_na_pasta': videos,
+        'treinamentos_no_banco': [
+            {
+                'id': t.id,
+                'titulo': t.titulo,
+                'arquivo_video': t.arquivo_video,
+                'existe': os.path.exists(t.arquivo_video) if t.arquivo_video else False
+            } for t in treinamentos
+        ]
+    }
+
+    return f"<pre>{str(debug_info)}</pre>"
+
+
+@app.route('/teste-video')
+def teste_video():
+    """Página de teste para reprodução de vídeos"""
+    return render_template('teste_video.html')
 
 
 if __name__ == '__main__':

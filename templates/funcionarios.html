@@ -49,11 +49,17 @@
                             </div>
                         </td>
                         <td>{{ funcionario.cpf }}</td>
-                        <td>{{ funcionario.rg }}</td>
+                        <td>{{ funcionario.rg or '' }}</td>
                         <td>
-                            <span class="badge bg-info">{{ funcionario.funcao }}</span>
+                            <span class="badge bg-info">{{ funcionario.funcao or 'Não informado' }}</span>
                         </td>
-                        <td>{{ funcionario.data_admissao.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if funcionario.data_admissao %}
+                            {{ funcionario.data_admissao.strftime('%d/%m/%Y') }}
+                            {% else %}
+                            <span class="text-muted">Não informada</span>
+                            {% endif %}
+                        </td>
                         <td class="text-center">
                             <span class="badge bg-primary">{{ funcionario.certificados|length }}</span>
                         </td>

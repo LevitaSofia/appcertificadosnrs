@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}{{ treinamento.titulo }} - Central de Treinamentos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Player de Vídeo -->
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <!-- Vídeo Player -->
+                <div class="position-relative">
+                    <video id="videoPlayer" class="w-100" style="max-height: 500px;" controls preload="metadata">
+                        <source src="{{ url_for('serve_video', filename=treinamento.arquivo_video|basename) }}"
+                            type="video/mp4">
+                        <source src="{{ url_for('serve_video', filename=treinamento.arquivo_video|basename) }}"
+                            type="video/webm">
+                        <source src="{{ url_for('serve_video', filename=treinamento.arquivo_video|basename) }}"
+                            type="video/ogg">
+                        <p>Seu navegador não suporta reprodução de vídeo.
+                            <a href="{{ url_for('serve_video', filename=treinamento.arquivo_video|basename) }}"
+                                download>Baixar vídeo</a>
+                        </p>
+                    </video>
+                </div>
+
+                <!-- Controles personalizados -->
+                <div class="p-3 bg-light border-top">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <button id="playPauseBtn" class="btn btn-primary me-2">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <small class="text-muted">
+                                    <span id="currentTime">00:00</span> / <span id="duration">00:00</span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-end">
+                                <small class="text-muted me-2">Velocidade:</small>
+                                <select id="playbackSpeed" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="0.5">0.5x</option>
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barra de progresso personalizada -->
+                    <div class="mt-2">
+                        <div class="progress" style="height: 8px; cursor: pointer;" id="progressBar">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do vídeo -->
+        <div class="card shadow mt-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h4>{{ treinamento.titulo }}</h4>
+                        <div class="mb-2">
+                            <span class="badge bg-primary me-2">{{ treinamento.tipo_nr }}</span>
+                            {% if treinamento.obrigatorio %}
+                            <span class="badge bg-danger me-2">Obrigatório</span>
+                            {% endif %}
+                            {% if treinamento.duracao_minutos %}
+                            <span class="badge bg-info">{{ treinamento.duracao_minutos }} min</span>
+                            {% endif %}
+                        </div>
+                        {% if treinamento.descricao %}
+                        <p class="text-muted">{{ treinamento.descricao }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Progresso -->
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h5>Seu Progresso</h5>
+                <div class="progress-circle mb-3"
+                    style="width: 120px; height: 120px; margin: 0 auto; position: relative;">
+                    <canvas width="120" height="120"></canvas>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <h3 class="mb-0">{{ "%.0f"|format(progresso.progresso_percent) }}%</h3>
+                        <small class="text-muted">completo</small>
+                    </div>
+                </div>
+
+                {% if progresso.concluido %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Treinamento concluído em {{ progresso.data_conclusao.strftime('%d/%m/%Y') }}!
+                </div>
+                {% else %}
+                <p class="text-muted">Continue assistindo para completar o treinamento.</p>
+                {% endif %}
+
+                {% if progresso.tempo_assistido_segundos > 0 %}
+                <small class="text-muted">
+                    Tempo assistido: {{ "%.0f"|format(progresso.tempo_assistido_segundos / 60) }} min
+                </small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Navegação -->
+        <div class="card shadow mt-3">
+            <div class="card-body">
+                <h6>Ações</h6>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('treinamentos') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar à Central
+                    </a>
+                    <a href="{{ url_for('serve_video', filename=treinamento.arquivo_video|basename) }}" download
+                        class="btn btn-outline-secondary">
+                        <i class="fas fa-download me-1"></i>Baixar Vídeo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const video = document.getElementById('videoPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const durationSpan = document.getElementById('duration');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = progressBar.querySelector('.progress-bar');
+        const speedSelect = document.getElementById('playbackSpeed');
+
+        let lastProgressUpdate = 0;
+        const treinamentoId = {{ treinamento.id }
+    };
+
+    // Funções de formatação de tempo
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+    }
+
+    // Eventos do vídeo
+    video.addEventListener('loadedmetadata', function () {
+        durationSpan.textContent = formatTime(video.duration);
+    });
+
+    video.addEventListener('timeupdate', function () {
+        const currentTime = video.currentTime;
+        const duration = video.duration;
+
+        currentTimeSpan.textContent = formatTime(currentTime);
+
+        if (duration > 0) {
+            const progress = (currentTime / duration) * 100;
+            progressFill.style.width = progress + '%';
+
+            // Atualizar progresso no servidor a cada 10 segundos
+            if (currentTime - lastProgressUpdate >= 10) {
+                updateProgress(currentTime, progress);
+                lastProgressUpdate = currentTime;
+            }
+        }
+    });
+
+    // Controle play/pause
+    playPauseBtn.addEventListener('click', function () {
+        if (video.paused) {
+            video.play();
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+            video.pause();
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+    });
+
+    // Controle de velocidade
+    speedSelect.addEventListener('change', function () {
+        video.playbackRate = parseFloat(this.value);
+    });
+
+    // Seek na barra de progresso
+    progressBar.addEventListener('click', function (e) {
+        if (video.duration) {
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            video.currentTime = percentage * video.duration;
+        }
+    });
+
+    // Atualizar ícone play/pause
+    video.addEventListener('play', function () {
+        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    });
+
+    video.addEventListener('pause', function () {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+    });
+
+    // Função para atualizar progresso no servidor
+    function updateProgress(tempoAssistido, progressoPercent) {
+        fetch('/treinamentos/progresso/' + treinamentoId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                tempo_assistido: Math.floor(tempoAssistido),
+                progresso_percent: Math.round(progressoPercent * 100) / 100
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.concluido) {
+                    // Mostrar mensagem de parabéns
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Parabéns!',
+                            text: 'Você concluiu este treinamento com sucesso!',
+                            confirmButtonColor: '#28a745'
+                        });
+                    } else {
+                        alert('Parabéns! Você concluiu este treinamento com sucesso!');
+                    }
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar progresso:', error));
+    }
+
+    // Círculo de progresso
+    function drawProgressCircle() {
+        const circle = document.querySelector('.progress-circle canvas');
+        if (!circle) return;
+
+        const ctx = circle.getContext('2d');
+        const centerX = 60;
+        const centerY = 60;
+        const radius = 50;
+        const progress = {{ progresso.progresso_percent }
+    } / 100;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, 120, 120);
+
+    // Círculo de fundo
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#e9ecef';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    // Círculo de progresso
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, -Math.PI / 2, (-Math.PI / 2) + (2 * Math.PI * progress));
+    ctx.strokeStyle = '#007bff';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    }
+
+    // Desenhar círculo de progresso
+    drawProgressCircle();
+
+    // Atualizar progresso final quando o vídeo terminar
+    video.addEventListener('ended', function () {
+        updateProgress(video.duration, 100);
+    });
+});
+</script>
+{% endblock %}

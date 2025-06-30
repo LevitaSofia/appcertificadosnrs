@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Treinamentos de {{ modulo_nr }} - Central de Treinamentos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Treinamentos - {{ modulo_nr }}</h1>
+        <a href="{{ url_for('modulos_treinamento') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Voltar aos Módulos
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% if treinamentos %}
+    <div class="row">
+        {% for treinamento in treinamentos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm card-hover">
+                <a href="{{ url_for('assistir_treinamento', treinamento_id=treinamento.id) }}" class="card-link">
+                    {% if treinamento.thumbnail %}
+                    <img src="{{ url_for('static', filename=treinamento.thumbnail) }}" class="card-img-top"
+                        alt="Thumbnail do {{ treinamento.titulo }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-primary text-white d-flex align-items-center justify-content-center"
+                        style="height: 180px;">
+                        <div class="text-center">
+                            <i class="fas fa-video fa-3x"></i>
+                            <p class="mb-0 mt-2">{{ treinamento.titulo }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ treinamento.titulo }}</h5>
+                        <p class="card-text text-muted small">{{ treinamento.descricao|truncate(100) }}</p>
+                    </div>
+                </a>
+                <div class="card-footer bg-white">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i> {{ treinamento.duracao_minutos }} min
+                    </small>
+                    {% if treinamento.obrigatorio %}
+                    <span class="badge bg-danger float-end">Obrigatório</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        Não há treinamentos disponíveis para este módulo no momento.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .card-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock %}

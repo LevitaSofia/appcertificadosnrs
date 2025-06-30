@@ -83,6 +83,65 @@
     </div>
 </div>
 
+<!-- Segunda linha de cards -->
+<div class="row g-4 mt-3">
+    <!-- Card Central de Treinamentos -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm border-primary">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-play-circle text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Central de Treinamentos</h5>
+                <p class="card-text">Vídeos de treinamento por NR</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('modulos_treinamento') }}" class="btn btn-outline-primary">Assistir Vídeos</a>
+                    <a href="{{ url_for('treinamentos_admin') }}" class="btn btn-primary">Gerenciar Vídeos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Configurações -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-cog text-secondary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Configurações</h5>
+                <p class="card-text">Modelos de NR e configurações</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('configuracoes') }}" class="btn btn-secondary">Configurar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Espaços vazios para manter layout -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm border-light">
+            <div class="card-body text-center d-flex align-items-center justify-content-center">
+                <div class="text-muted">
+                    <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                    <p class="mb-0">Espaço para futuras funcionalidades</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm border-light">
+            <div class="card-body text-center d-flex align-items-center justify-content-center">
+                <div class="text-muted">
+                    <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                    <p class="mb-0">Espaço para futuras funcionalidades</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mt-5">
     <div class="col-12">
         <div class="card">
@@ -124,6 +183,7 @@
             <ol class="mb-0">
                 <li><strong>Cadastre funcionários</strong> com suas informações básicas</li>
                 <li><strong>Configure os modelos</strong> de PowerPoint para cada NR</li>
+                <li><strong>Adicione vídeos de treinamento</strong> na Central de Treinamentos</li>
                 <li><strong>Gere certificados</strong> unitários ou em lote</li>
                 <li><strong>Acompanhe</strong> através dos relatórios</li>
             </ol>

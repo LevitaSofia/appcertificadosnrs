@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Teste de Vídeo</title>
+</head>
+
+<body>
+    <h1>Teste de Reprodução de Vídeo</h1>
+
+    <h2>Teste 1: Rota personalizada</h2>
+    <video controls width="640" height="360">
+        <source src="/video/20250629_151335_Testes_da_Linha_Tempera.mp4" type="video/mp4">
+        Seu navegador não suporta vídeo.
+    </video>
+
+    <h2>Teste 2: Rota estática direta</h2>
+    <video controls width="640" height="360">
+        <source src="/static/videos/20250629_151335_Testes_da_Linha_Tempera.mp4" type="video/mp4">
+        Seu navegador não suporta vídeo.
+    </video>
+
+    <h2>Links de teste</h2>
+    <p><a href="/video/20250629_151335_Testes_da_Linha_Tempera.mp4" target="_blank">Rota personalizada</a></p>
+    <p><a href="/static/videos/20250629_151335_Testes_da_Linha_Tempera.mp4" target="_blank">Rota estática</a></p>
+
+    <h2>Debug</h2>
+    <p><a href="/debug/videos" target="_blank">Ver informações de debug</a></p>
+</body>
+
+</html>
