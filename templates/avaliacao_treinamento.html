@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Avaliação - {{ treinamento.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header da Avaliação -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clipboard-check fa-2x me-3"></i>
+                        <div>
+                            <h4 class="mb-0">{{ avaliacao.titulo }}</h4>
+                            <p class="mb-0">{{ treinamento.titulo }} - {{ treinamento.tipo_nr }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if avaliacao.descricao %}
+                    <p>{{ avaliacao.descricao }}</p>
+                    {% endif %}
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <i class="fas fa-question-circle me-1"></i>
+                                {{ perguntas|length }} pergunta{% if perguntas|length != 1 %}s{% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <i class="fas fa-star me-1"></i>
+                                Nota mínima: {{ avaliacao.nota_minima_aprovacao }}
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Tempo: <span id="cronometro">00:00</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário da Avaliação -->
+            <form id="formAvaliacao" method="POST" action="{{ url_for('submeter_avaliacao', treinamento_id=treinamento.id) }}">
+                <input type="hidden" name="tempo_realizacao" id="tempoRealizacao" value="0">
+                
+                {% for pergunta in perguntas %}
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <span class="badge bg-primary me-2">{{ pergunta.ordem }}</span>
+                            {{ pergunta.texto_pergunta }}
+                            <small class="text-muted">({{ pergunta.pontos }} ponto{% if pergunta.pontos != 1 %}s{% endif %})</small>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for opcao in pergunta.opcoes|sort(attribute='ordem') %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" 
+                                   name="pergunta_{{ pergunta.id }}" 
+                                   value="{{ opcao.id }}"
+                                   id="opcao_{{ opcao.id }}" required>
+                            <label class="form-check-label" for="opcao_{{ opcao.id }}">
+                                {{ opcao.texto_opcao }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Botões de Ação -->
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <button type="button" class="btn btn-secondary me-2" onclick="voltarTreinamento()">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar ao Treinamento
+                        </button>
+                        <button type="submit" class="btn btn-success btn-lg" id="btnSubmeter">
+                            <i class="fas fa-paper-plane me-1"></i>Enviar Avaliação
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cronômetro
+    let segundos = 0;
+    const cronometro = document.getElementById('cronometro');
+    const tempoRealizacao = document.getElementById('tempoRealizacao');
+    
+    function atualizarCronometro() {
+        segundos++;
+        const mins = Math.floor(segundos / 60);
+        const secs = segundos % 60;
+        cronometro.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        tempoRealizacao.value = segundos;
+    }
+    
+    // Iniciar cronômetro
+    const intervaloCronometro = setInterval(atualizarCronometro, 1000);
+    
+    // Confirmação antes de enviar
+    document.getElementById('formAvaliacao').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Verificar se todas as perguntas foram respondidas
+        const perguntas = {{ perguntas|length }};
+        const respostasPreenchidas = document.querySelectorAll('input[type="radio"]:checked').length;
+        
+        if (respostasPreenchidas < perguntas) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                text: `Você respondeu ${respostasPreenchidas} de ${perguntas} perguntas. Deseja continuar mesmo assim?`,
+                showCancelButton: true,
+                confirmButtonText: 'Sim, enviar',
+                cancelButtonText: 'Revisar respostas',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    enviarAvaliacao();
+                }
+            });
+        } else {
+            Swal.fire({
+                icon: 'question',
+                title: 'Confirmar Envio',
+                text: 'Tem certeza que deseja enviar sua avaliação? Após o envio não será possível alterar as respostas.',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, enviar',
+                cancelButtonText: 'Revisar',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    enviarAvaliacao();
+                }
+            });
+        }
+    });
+    
+    function enviarAvaliacao() {
+        clearInterval(intervaloCronometro);
+        document.getElementById('btnSubmeter').disabled = true;
+        document.getElementById('formAvaliacao').submit();
+    }
+});
+
+function voltarTreinamento() {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Atenção!',
+        text: 'Se você voltar agora, perderá todo o progresso da avaliação. Deseja continuar?',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, voltar',
+        cancelButtonText: 'Ficar aqui',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = "{{ url_for('assistir_treinamento', treinamento_id=treinamento.id) }}";
+        }
+    });
+}
+</script>
+{% endblock %}

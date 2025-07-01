@@ -155,21 +155,82 @@
             </div>
         </div>
 
+        <!-- Próximo Vídeo -->
+        {% if proximo_treinamento %}
+        <div class="card shadow mb-3">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-forward me-2"></i>Próximo Vídeo
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-play-circle fa-3x text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">{{ proximo_treinamento.titulo }}</h6>
+                        <small class="text-muted">
+                            <span class="badge bg-primary me-2">{{ proximo_treinamento.tipo_nr }}</span>
+                            {% if proximo_treinamento.duracao_minutos %}
+                            <i class="fas fa-clock me-1"></i>{{ proximo_treinamento.duracao_minutos }} min
+                            {% endif %}
+                        </small>
+                        <div class="mt-2">
+                            <a href="{{ url_for('assistir_treinamento', treinamento_id=proximo_treinamento.id) }}" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-play me-1"></i>Assistir Agora
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Outros treinamentos -->
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-list me-2"></i>Outros Treinamentos
+                    <i class="fas fa-list me-2"></i>Outros Treinamentos {{ treinamento.tipo_nr }}
                 </h6>
             </div>
             <div class="card-body">
+                {% if outros_treinamentos %}
                 <div class="list-group list-group-flush">
-                    <!-- Em produção, buscar outros treinamentos -->
-                    <div class="text-center text-muted py-3">
-                        <i class="fas fa-video fa-2x mb-2"></i>
-                        <p class="mb-0">Mais treinamentos em breve</p>
+                    {% for outro in outros_treinamentos %}
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-play-circle text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ outro.titulo }}</h6>
+                                <small class="text-muted">
+                                    {% if outro.duracao_minutos %}
+                                    <i class="fas fa-clock me-1"></i>{{ outro.duracao_minutos }} min
+                                    {% endif %}
+                                    {% if outro.obrigatorio %}
+                                    <span class="badge bg-warning text-dark ms-2">Obrigatório</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('assistir_treinamento', treinamento_id=outro.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-play me-1"></i>Assistir
+                                </a>
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-video fa-2x mb-2"></i>
+                    <p class="mb-0">Nenhum outro treinamento disponível</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -250,8 +311,28 @@
                 const progress = (video.currentTime / video.duration) * 100;
                 progressFill.style.width = progress + '%';
 
+                // Debug: log do progresso
+                console.log('Progresso atual:', Math.round(progress) + '%');
+
+                // Atualizar círculo de progresso em tempo real
+                drawProgressCircle(progress / 100);
+                
+                // Atualizar porcentagem no card
+                const progressPercent = document.querySelector('.percentage');
+                if (progressPercent) {
+                    progressPercent.textContent = Math.round(progress) + '%';
+                }
+
+                // Atualizar minutos assistidos
+                const minutosElement = document.querySelector('.col-6 h6');
+                if (minutosElement) {
+                    const minutosText = Math.floor(video.currentTime / 60);
+                    minutosElement.textContent = minutosText;
+                }
+
                 // Atualizar progresso no servidor a cada 10 segundos
                 if (video.currentTime - lastProgressUpdate >= 10) {
+                    console.log('Enviando progresso para servidor:', Math.round(progress) + '%');
                     updateProgress(video.currentTime, progress);
                     lastProgressUpdate = video.currentTime;
                 }
@@ -307,21 +388,52 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.status === 'success' && data.concluido) {
-                        // Mostrar mensagem de parabéns
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Parabéns!',
-                            text: 'Você concluiu este treinamento com sucesso!',
-                            confirmButtonColor: '#28a745'
-                        });
+                    if (data.status === 'success') {
+                        // Atualizar indicador de conclusão
+                        if (data.concluido) {
+                            const progressText = document.querySelector('.progress-text');
+                            if (progressText) {
+                                progressText.textContent = '100%';
+                            }
+                            const conclusaoTexto = document.querySelector('.text-center small:last-child');
+                            if (conclusaoTexto) {
+                                conclusaoTexto.innerHTML = '<i class="fas fa-check-circle text-success me-1"></i><strong style="color: #28a745;">Concluído</strong>';
+                            }
+                            
+                            // Verificar se tem avaliação disponível
+                            if (data.tem_avaliacao && !data.ja_fez_avaliacao && data.url_avaliacao) {
+                                // Mostrar modal com opção de fazer avaliação
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Parabéns!',
+                                    text: 'Você concluiu este treinamento! Agora você pode fazer a avaliação.',
+                                    showCancelButton: true,
+                                    confirmButtonText: '<i class="fas fa-clipboard-check me-1"></i>Fazer Avaliação',
+                                    cancelButtonText: 'Fazer depois',
+                                    confirmButtonColor: '#28a745',
+                                    cancelButtonColor: '#6c757d'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = data.url_avaliacao;
+                                    }
+                                });
+                            } else {
+                                // Mostrar mensagem normal de conclusão
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Parabéns!',
+                                    text: 'Você concluiu este treinamento com sucesso!',
+                                    confirmButtonColor: '#28a745'
+                                });
+                            }
+                        }
                     }
                 })
                 .catch(error => console.error('Erro ao atualizar progresso:', error));
         }
 
         // Círculo de progresso
-        function drawProgressCircle() {
+        function drawProgressCircle(progress = initialProgress) {
             const circle = document.querySelector('.progress-circle canvas');
             if (!circle) return;
 
@@ -329,7 +441,6 @@
             const centerX = 60;
             const centerY = 60;
             const radius = 50;
-            const progress = initialProgress;
 
             // Limpar canvas
             ctx.clearRect(0, 0, 120, 120);
@@ -344,7 +455,7 @@
             // Círculo de progresso
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, -Math.PI / 2, (-Math.PI / 2) + (2 * Math.PI * progress));
-            ctx.strokeStyle = '#007bff';
+            ctx.strokeStyle = progress >= 0.9 ? '#28a745' : '#007bff'; // Verde quando quase completo
             ctx.lineWidth = 8;
             ctx.lineCap = 'round';
             ctx.stroke();
@@ -356,7 +467,62 @@
         // Atualizar progresso final quando o vídeo terminar
         video.addEventListener('ended', function () {
             updateProgress(video.duration, 100);
+            
+            // Mostrar sugestão do próximo vídeo se existir
+            {% if proximo_treinamento %}
+            mostrarSugestaoProximoVideo();
+            {% endif %}
         });
+
+        // Função para mostrar sugestão do próximo vídeo
+        {% if proximo_treinamento %}
+        function mostrarSugestaoProximoVideo() {
+            // Criar modal de sugestão
+            const modalHtml = `
+                <div class="modal fade" id="modalProximoVideo" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-forward me-2"></i>Próximo Vídeo
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <i class="fas fa-play-circle fa-4x text-success mb-3"></i>
+                                <h5>{{ proximo_treinamento.titulo }}</h5>
+                                <p class="text-muted">{{ proximo_treinamento.descricao or 'Continuar com o próximo treinamento' }}</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary me-2">{{ proximo_treinamento.tipo_nr }}</span>
+                                    {% if proximo_treinamento.duracao_minutos %}
+                                    <span class="badge bg-info">{{ proximo_treinamento.duracao_minutos }} min</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i>Não, obrigado
+                                </button>
+                                <a href="{{ url_for('assistir_treinamento', treinamento_id=proximo_treinamento.id) }}" 
+                                   class="btn btn-success">
+                                    <i class="fas fa-play me-1"></i>Assistir Agora
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Adicionar modal ao DOM se não existir
+            if (!document.getElementById('modalProximoVideo')) {
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            }
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalProximoVideo'));
+            modal.show();
+        }
+        {% endif %}
     });
 </script>
 {% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado da Avaliação - {{ resultado.avaliacao.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Resultado da Avaliação -->
+            <div class="card shadow">
+                <div class="card-header {% if resultado.aprovado %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <div class="text-center">
+                        <i class="fas {% if resultado.aprovado %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-3x mb-2"></i>
+                        <h3 class="mb-0">
+                            {% if resultado.aprovado %}
+                            Parabéns! Você foi aprovado!
+                            {% else %}
+                            Não foi dessa vez...
+                            {% endif %}
+                        </h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h1 class="display-3 {% if resultado.aprovado %}text-success{% else %}text-danger{% endif %}">
+                            {{ "%.1f"|format(resultado.nota_obtida) }}
+                        </h1>
+                        <p class="text-muted">Nota obtida (mínimo: {{ resultado.avaliacao.nota_minima_aprovacao }})</p>
+                    </div>
+
+                    <!-- Estatísticas -->
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3">
+                                <h5 class="text-primary">{{ resultado.respostas|selectattr('correta')|list|length }}</h5>
+                                <small class="text-muted">Acertos</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3">
+                                <h5 class="text-danger">{{ resultado.respostas|rejectattr('correta')|list|length }}</h5>
+                                <small class="text-muted">Erros</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3">
+                                <h5 class="text-info">
+                                    {% if resultado.tempo_realizacao_segundos %}
+                                    {{ (resultado.tempo_realizacao_segundos // 60)|int }}:{{ "%02d"|format(resultado.tempo_realizacao_segundos % 60) }}
+                                    {% else %}
+                                    --:--
+                                    {% endif %}
+                                </h5>
+                                <small class="text-muted">Tempo</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revisão das Respostas -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-list-check me-2"></i>Revisão das Respostas</h5>
+                        
+                        {% for resposta in resultado.respostas %}
+                        <div class="card mb-3 {% if resposta.correta %}border-success{% else %}border-danger{% endif %}">
+                            <div class="card-header {% if resposta.correta %}bg-light-success{% else %}bg-light-danger{% endif %}">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge {% if resposta.correta %}bg-success{% else %}bg-danger{% endif %} me-2">
+                                        {{ resposta.pergunta.ordem }}
+                                    </span>
+                                    <span class="flex-grow-1">{{ resposta.pergunta.texto_pergunta }}</span>
+                                    <i class="fas {% if resposta.correta %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% for opcao in resposta.pergunta.opcoes|sort(attribute='ordem') %}
+                                <div class="mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if opcao.id == resposta.opcao_escolhida_id %}
+                                        <i class="fas fa-dot-circle me-2 {% if opcao.correta %}text-success{% else %}text-danger{% endif %}"></i>
+                                        {% elif opcao.correta %}
+                                        <i class="fas fa-check-circle me-2 text-success"></i>
+                                        {% else %}
+                                        <i class="far fa-circle me-2 text-muted"></i>
+                                        {% endif %}
+                                        
+                                        <span class="{% if opcao.id == resposta.opcao_escolhida_id and not opcao.correta %}text-danger{% elif opcao.correta %}text-success fw-bold{% endif %}">
+                                            {{ opcao.texto_opcao }}
+                                        </span>
+                                        
+                                        {% if opcao.id == resposta.opcao_escolhida_id %}
+                                        <span class="badge {% if opcao.correta %}bg-success{% else %}bg-danger{% endif %} ms-2">
+                                            Sua resposta
+                                        </span>
+                                        {% elif opcao.correta %}
+                                        <span class="badge bg-success ms-2">Correta</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Informações da Avaliação -->
+                    <div class="bg-light p-3 rounded mb-4">
+                        <small class="text-muted">
+                            <strong>Treinamento:</strong> {{ resultado.avaliacao.treinamento.titulo }} ({{ resultado.avaliacao.treinamento.tipo_nr }})<br>
+                            <strong>Data de realização:</strong> {{ resultado.data_realizacao.strftime('%d/%m/%Y às %H:%M') }}<br>
+                            <strong>Avaliação:</strong> {{ resultado.avaliacao.titulo }}
+                        </small>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="text-center">
+                        {% if not resultado.aprovado %}
+                        <a href="{{ url_for('assistir_treinamento', treinamento_id=resultado.avaliacao.treinamento.id) }}" 
+                           class="btn btn-warning me-2">
+                            <i class="fas fa-redo me-1"></i>Revisar Treinamento
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('treinamentos') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-list me-1"></i>Outros Treinamentos
+                        </a>
+                        
+                        <button onclick="window.print()" class="btn btn-outline-secondary">
+                            <i class="fas fa-print me-1"></i>Imprimir Resultado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-light-success {
+    background-color: #d1e7dd !important;
+}
+.bg-light-danger {
+    background-color: #f8d7da !important;
+}
+
+@media print {
+    .btn, .navbar, .footer {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

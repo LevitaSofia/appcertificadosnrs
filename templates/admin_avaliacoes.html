@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Avaliações - Sistema de Certificados NR{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-clipboard-check me-2"></i>Administrar Avaliações</h2>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovaAvaliacao">
+            <i class="fas fa-plus me-1"></i>Nova Avaliação
+        </button>
+    </div>
+
+    <!-- Lista de Avaliações -->
+    <div class="card shadow">
+        <div class="card-body">
+            {% if avaliacoes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Treinamento</th>
+                            <th>Título</th>
+                            <th>Perguntas</th>
+                            <th>Nota Mínima</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for avaliacao in avaliacoes %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ avaliacao.treinamento.tipo_nr }}</span>
+                                <br>
+                                <small class="text-muted">{{ avaliacao.treinamento.titulo }}</small>
+                            </td>
+                            <td>{{ avaliacao.titulo }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ avaliacao.perguntas|length }}</span>
+                                pergunta{% if avaliacao.perguntas|length != 1 %}s{% endif %}
+                            </td>
+                            <td>{{ avaliacao.nota_minima_aprovacao }}</td>
+                            <td>
+                                {% if avaliacao.ativo %}
+                                <span class="badge bg-success">Ativa</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inativa</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-primary" 
+                                            onclick="visualizarAvaliacao({{ avaliacao.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" 
+                                            onclick="editarAvaliacao({{ avaliacao.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            onclick="excluirAvaliacao({{ avaliacao.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma avaliação cadastrada</h5>
+                <p class="text-muted">Crie uma nova avaliação para começar.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Avaliação -->
+<div class="modal fade" id="modalNovaAvaliacao" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Nova Avaliação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNovaAvaliacao">
+                    <div class="mb-3">
+                        <label class="form-label">Treinamento</label>
+                        <select class="form-select" name="treinamento_id" required>
+                            <option value="">Selecione um treinamento</option>
+                            {% for treinamento in treinamentos %}
+                            <option value="{{ treinamento.id }}">
+                                {{ treinamento.tipo_nr }} - {{ treinamento.titulo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Título da Avaliação</label>
+                        <input type="text" class="form-control" name="titulo" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Descrição (opcional)</label>
+                        <textarea class="form-control" name="descricao" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Nota Mínima para Aprovação</label>
+                        <input type="number" class="form-control" name="nota_minima" 
+                               value="7.0" min="0" max="10" step="0.1" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="salvarAvaliacao()">
+                    <i class="fas fa-save me-1"></i>Criar Avaliação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function visualizarAvaliacao(id) {
+    // Implementar visualização da avaliação
+    alert('Funcionalidade em desenvolvimento');
+}
+
+function editarAvaliacao(id) {
+    // Implementar edição da avaliação
+    alert('Funcionalidade em desenvolvimento');
+}
+
+function excluirAvaliacao(id) {
+    Swal.fire({
+        title: 'Excluir Avaliação',
+        text: 'Esta ação não pode ser desfeita!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Implementar exclusão
+            alert('Funcionalidade em desenvolvimento');
+        }
+    });
+}
+
+function salvarAvaliacao() {
+    const form = document.getElementById('formNovaAvaliacao');
+    const formData = new FormData(form);
+    
+    // Implementar salvamento via AJAX
+    alert('Funcionalidade em desenvolvimento');
+}
+</script>
+{% endblock %}
