@@ -70,3 +70,6 @@ $RECYCLE.BIN/
 .env
 *.key
 config_local.py
+
+# Pasta de vídeos de treinamento
+static/videos/
