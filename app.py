@@ -2121,12 +2121,12 @@ def gerar_nr01_pdf(funcionario):
     """Gera o certificado NR01 - versão otimizada para Windows"""
     try:
         # Método otimizado: registrar no banco e preparar para impressão via navegador
-        
+
         # Criar nome de arquivo limpo
         nome_funcionario_limpo = re.sub(r'[<>:"/\\|?*]', '_', funcionario.nome)
         data_formatada = datetime.now().strftime('%Y-%m-%d')
         nome_arquivo = f"{nome_funcionario_limpo}_{data_formatada}_NR01.pdf"
-        
+
         # Registrar no banco de dados
         certificado = CertificadoGerado(
             funcionario_id=funcionario.id,
