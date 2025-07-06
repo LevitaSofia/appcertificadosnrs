@@ -43,9 +43,9 @@
                             <label for="tipo_treinamento" class="form-label">Tipo de Treinamento *</label>
                             <select class="form-select" id="tipo_treinamento" name="tipo_treinamento" required>
                                 <option value="">Selecione o tipo...</option>
-                                <option value="Inicial">Treinamento Inicial</option>
+                                <option value="Inicial_Admissional">Treinamento Inicial/Admissional</option>
                                 <option value="Reciclagem">Reciclagem</option>
-                                <option value="Atualização">Atualização</option>
+                                <option value="Atualizacao">Atualização</option>
                                 <option value="Complementar">Complementar</option>
                             </select>
                         </div>
@@ -149,6 +149,14 @@
     {% endfor %}
 };
 
+    // Mapeamento dos tipos de treinamento para exibição
+    const tiposTreinamento = {
+        'Inicial_Admissional': 'Treinamento Inicial/Admissional',
+        'Reciclagem': 'Reciclagem',
+        'Atualizacao': 'Atualização',
+        'Complementar': 'Complementar'
+    };
+
     // Função para verificar se todos os campos estão preenchidos
     function verificarCampos() {
         const funcionarioId = document.getElementById('funcionario_id').value;
@@ -177,13 +185,14 @@
         if (funcionarioId && tipoNr && tipoTreinamento && dataEmissao) {
             const funcionario = funcionariosData[funcionarioId];
             const descricaoNr = modelosData[tipoNr];
+            const descricaoTreinamento = tiposTreinamento[tipoTreinamento] || tipoTreinamento;
 
             if (funcionario) {
                 document.getElementById('prev-funcionario').textContent = funcionario.nome;
                 document.getElementById('prev-cpf').textContent = funcionario.cpf;
                 document.getElementById('prev-funcao').textContent = funcionario.funcao;
                 document.getElementById('prev-nr').textContent = `${tipoNr} - ${descricaoNr}`;
-                document.getElementById('prev-treinamento').textContent = tipoTreinamento;
+                document.getElementById('prev-treinamento').textContent = descricaoTreinamento;
                 document.getElementById('prev-data').textContent = new Date(dataEmissao).toLocaleDateString('pt-BR');
                 return true;
             }

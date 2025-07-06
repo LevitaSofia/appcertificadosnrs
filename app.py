@@ -162,33 +162,41 @@ class ProgressoTreinamento(db.Model):
 
 class Avaliacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    treinamento_id = db.Column(db.Integer, db.ForeignKey('treinamento.id'), nullable=False)
+    treinamento_id = db.Column(db.Integer, db.ForeignKey(
+        'treinamento.id'), nullable=False)
     titulo = db.Column(db.String(200), nullable=False)
     descricao = db.Column(db.Text, nullable=True)
     nota_minima_aprovacao = db.Column(db.Float, default=7.0, nullable=False)
     ativo = db.Column(db.Boolean, default=True, nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.now, nullable=False)
-    
+
     # Relacionamentos
-    perguntas = db.relationship('PerguntaAvaliacao', backref='avaliacao', lazy=True, cascade='all, delete-orphan')
-    resultados = db.relationship('ResultadoAvaliacao', backref='avaliacao', lazy=True, cascade='all, delete-orphan')
+    perguntas = db.relationship(
+        'PerguntaAvaliacao', backref='avaliacao', lazy=True, cascade='all, delete-orphan')
+    resultados = db.relationship(
+        'ResultadoAvaliacao', backref='avaliacao', lazy=True, cascade='all, delete-orphan')
 
 
 class PerguntaAvaliacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    avaliacao_id = db.Column(db.Integer, db.ForeignKey('avaliacao.id'), nullable=False)
+    avaliacao_id = db.Column(db.Integer, db.ForeignKey(
+        'avaliacao.id'), nullable=False)
     texto_pergunta = db.Column(db.Text, nullable=False)
-    tipo_pergunta = db.Column(db.String(20), default='multipla_escolha', nullable=False)  # multipla_escolha, verdadeiro_falso
+    # multipla_escolha, verdadeiro_falso
+    tipo_pergunta = db.Column(
+        db.String(20), default='multipla_escolha', nullable=False)
     ordem = db.Column(db.Integer, nullable=False)
     pontos = db.Column(db.Float, default=1.0, nullable=False)
-    
+
     # Relacionamentos
-    opcoes = db.relationship('OpcaoResposta', backref='pergunta', lazy=True, cascade='all, delete-orphan')
+    opcoes = db.relationship(
+        'OpcaoResposta', backref='pergunta', lazy=True, cascade='all, delete-orphan')
 
 
 class OpcaoResposta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta_avaliacao.id'), nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey(
+        'pergunta_avaliacao.id'), nullable=False)
     texto_opcao = db.Column(db.Text, nullable=False)
     correta = db.Column(db.Boolean, default=False, nullable=False)
     ordem = db.Column(db.Integer, nullable=False)
@@ -196,24 +204,31 @@ class OpcaoResposta(db.Model):
 
 class ResultadoAvaliacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    funcionario_id = db.Column(db.Integer, db.ForeignKey('funcionario.id'), nullable=False)
-    avaliacao_id = db.Column(db.Integer, db.ForeignKey('avaliacao.id'), nullable=False)
+    funcionario_id = db.Column(db.Integer, db.ForeignKey(
+        'funcionario.id'), nullable=False)
+    avaliacao_id = db.Column(db.Integer, db.ForeignKey(
+        'avaliacao.id'), nullable=False)
     nota_obtida = db.Column(db.Float, nullable=False)
     aprovado = db.Column(db.Boolean, nullable=False)
-    data_realizacao = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    data_realizacao = db.Column(
+        db.DateTime, default=datetime.now, nullable=False)
     tempo_realizacao_segundos = db.Column(db.Integer, nullable=True)
-    
+
     # Constraint única: um funcionário só pode ter um resultado por avaliação
-    __table_args__ = (db.UniqueConstraint('funcionario_id', 'avaliacao_id', name='unique_funcionario_avaliacao'),)
+    __table_args__ = (db.UniqueConstraint('funcionario_id',
+                      'avaliacao_id', name='unique_funcionario_avaliacao'),)
 
 
 class RespostaFuncionario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    resultado_avaliacao_id = db.Column(db.Integer, db.ForeignKey('resultado_avaliacao.id'), nullable=False)
-    pergunta_id = db.Column(db.Integer, db.ForeignKey('pergunta_avaliacao.id'), nullable=False)
-    opcao_escolhida_id = db.Column(db.Integer, db.ForeignKey('opcao_resposta.id'), nullable=True)
+    resultado_avaliacao_id = db.Column(db.Integer, db.ForeignKey(
+        'resultado_avaliacao.id'), nullable=False)
+    pergunta_id = db.Column(db.Integer, db.ForeignKey(
+        'pergunta_avaliacao.id'), nullable=False)
+    opcao_escolhida_id = db.Column(
+        db.Integer, db.ForeignKey('opcao_resposta.id'), nullable=True)
     correta = db.Column(db.Boolean, nullable=False)
-    
+
     # Relacionamentos
     resultado = db.relationship('ResultadoAvaliacao', backref='respostas')
     pergunta = db.relationship('PerguntaAvaliacao')
@@ -357,6 +372,15 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
         data_formatada = data_emissao.strftime('%d/%m/%Y')
         data_admissao_formatada = funcionario.data_admissao.strftime(
             '%d/%m/%Y') if funcionario.data_admissao else 'Não informado'
+        
+        # Converter tipo_treinamento para exibição no certificado
+        tipos_treinamento_display = {
+            'Inicial_Admissional': 'Treinamento Inicial/Admissional',
+            'Reciclagem': 'Reciclagem',
+            'Atualizacao': 'Atualização',
+            'Complementar': 'Complementar'
+        }
+        tipo_treinamento_display = tipos_treinamento_display.get(tipo_treinamento, tipo_treinamento)
 
         substituicoes = {
             '{{NOME}}': funcionario.nome,
@@ -364,7 +388,7 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
             '{{RG}}': funcionario.rg if funcionario.rg else 'Não informado',
             '{{CARGO}}': funcionario.funcao if funcionario.funcao else 'Não informado',
             '{{FUNCAO}}': funcionario.funcao if funcionario.funcao else 'Não informado',
-            '{{TIPO_TREINAMENTO}}': tipo_treinamento,
+            '{{TIPO_TREINAMENTO}}': tipo_treinamento_display,
             '{{DATA}}': data_formatada,
             '{{DATA_EMISSAO}}': data_formatada,
             '{{DATA_ADMISSAO}}': data_admissao_formatada,
@@ -393,7 +417,9 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
 
         # Salvar PowerPoint temporário
         data_formatada_arquivo = data_emissao.strftime('%Y-%m-%d')
-        nome_arquivo_base = f"{nome_funcionario_limpo}_{data_formatada_arquivo}_{tipo_nr}_{tipo_treinamento}"
+        # Limpar o tipo_treinamento para nome de arquivo
+        tipo_treinamento_limpo = re.sub(r'[<>:"/\\|?*]', '_', tipo_treinamento)
+        nome_arquivo_base = f"{nome_funcionario_limpo}_{data_formatada_arquivo}_{tipo_nr}_{tipo_treinamento_limpo}"
         caminho_pptx_temp = os.path.join(
             pasta_funcionario, f"{nome_arquivo_base}.pptx")
         caminho_pdf_final = os.path.join(
@@ -499,9 +525,12 @@ def cadastrar_funcionario():
             data_admissao=data_admissao,
             data_nascimento=data_nascimento,
             telefone=telefone,
-            email=email,
-            senha=senha
+            email=email
         )
+
+        # Define a senha se fornecida
+        if senha:
+            funcionario.set_password(senha)
 
         db.session.add(funcionario)
         db.session.commit()
@@ -1000,15 +1029,15 @@ def atualizar_progresso(treinamento_id):
             if progresso_percent >= 90 and not progresso.concluido:
                 progresso.concluido = True
                 progresso.data_conclusao = datetime.now()
-                
+
                 # Verificar se existe avaliação para este treinamento
                 avaliacao = Avaliacao.query.filter_by(
-                    treinamento_id=treinamento_id, 
+                    treinamento_id=treinamento_id,
                     ativo=True
                 ).first()
-                
+
                 tem_avaliacao = avaliacao is not None
-                
+
                 # Verificar se já fez a avaliação
                 ja_fez_avaliacao = False
                 if avaliacao:
@@ -1017,11 +1046,11 @@ def atualizar_progresso(treinamento_id):
                         avaliacao_id=avaliacao.id
                     ).first()
                     ja_fez_avaliacao = resultado_existente is not None
-                
+
                 db.session.commit()
-                
+
                 return jsonify({
-                    'status': 'success', 
+                    'status': 'success',
                     'concluido': True,
                     'tem_avaliacao': tem_avaliacao,
                     'ja_fez_avaliacao': ja_fez_avaliacao,
@@ -1370,7 +1399,6 @@ def importar_funcionarios():
                 cpf_limpo = re.sub(r'[^0-9]', '', func_data['cpf'])
                 cpf_formatado = f"{cpf_limpo[:3]}.{cpf_limpo[3:6]}.{cpf_limpo[6:9]}-{cpf_limpo[9:11]}"
 
-
                 # Verificar se funcionário já existe e atualizar
                 funcionario_existente = Funcionario.query.filter_by(
                     cpf=cpf_formatado).first()
@@ -1397,7 +1425,8 @@ def importar_funcionarios():
                         'funcao', 'Instalador de Telas')
                     funcionario_existente.telefone = func_data['telefone']
                     funcionario_existente.email = func_data['email'] if func_data['email'] else None
-                    funcionario_existente.senha = func_data['senha']
+                    if func_data['senha']:
+                        funcionario_existente.set_password(func_data['senha'])
                     sucessos += 1
                     continue
 
@@ -1408,11 +1437,14 @@ def importar_funcionarios():
                     data_nascimento=data_nascimento,
                     telefone=func_data['telefone'],
                     email=func_data['email'] if func_data['email'] else None,
-                    senha=func_data['senha'],
                     # Usar função específica ou padrão
                     funcao=func_data.get('funcao', 'Instalador de Telas'),
                     data_admissao=datetime.now().date()  # Data atual como admissão
                 )
+
+                # Define a senha
+                if func_data['senha']:
+                    funcionario.set_password(func_data['senha'])
 
                 db.session.add(funcionario)
                 sucessos += 1
@@ -1494,7 +1526,8 @@ def criar_tabelas():
     # Criar avaliações de exemplo se não existirem
     treinamento_nr06 = Treinamento.query.filter_by(tipo_nr='NR06').first()
     if treinamento_nr06:
-        avaliacao_existente = Avaliacao.query.filter_by(treinamento_id=treinamento_nr06.id).first()
+        avaliacao_existente = Avaliacao.query.filter_by(
+            treinamento_id=treinamento_nr06.id).first()
         if not avaliacao_existente:
             # Criar avaliação para NR06
             avaliacao_nr06 = Avaliacao(
@@ -1505,7 +1538,7 @@ def criar_tabelas():
             )
             db.session.add(avaliacao_nr06)
             db.session.flush()  # Para obter o ID
-            
+
             # Perguntas da avaliação NR06
             perguntas_nr06 = [
                 {
@@ -1513,10 +1546,14 @@ def criar_tabelas():
                     'ordem': 1,
                     'pontos': 2.0,
                     'opcoes': [
-                        {'texto': 'Equipamento de Proteção Individual', 'correta': True, 'ordem': 1},
-                        {'texto': 'Equipamento de Prevenção Individual', 'correta': False, 'ordem': 2},
-                        {'texto': 'Equipamento de Proteção Integral', 'correta': False, 'ordem': 3},
-                        {'texto': 'Equipamento de Prevenção Integral', 'correta': False, 'ordem': 4}
+                        {'texto': 'Equipamento de Proteção Individual',
+                            'correta': True, 'ordem': 1},
+                        {'texto': 'Equipamento de Prevenção Individual',
+                            'correta': False, 'ordem': 2},
+                        {'texto': 'Equipamento de Proteção Integral',
+                            'correta': False, 'ordem': 3},
+                        {'texto': 'Equipamento de Prevenção Integral',
+                            'correta': False, 'ordem': 4}
                     ]
                 },
                 {
@@ -1524,10 +1561,14 @@ def criar_tabelas():
                     'ordem': 2,
                     'pontos': 2.0,
                     'opcoes': [
-                        {'texto': 'Apenas quando há risco iminente', 'correta': False, 'ordem': 1},
-                        {'texto': 'Sempre que houver risco que não possa ser eliminado', 'correta': True, 'ordem': 2},
-                        {'texto': 'Somente quando solicitado pelo supervisor', 'correta': False, 'ordem': 3},
-                        {'texto': 'Apenas em caso de emergência', 'correta': False, 'ordem': 4}
+                        {'texto': 'Apenas quando há risco iminente',
+                            'correta': False, 'ordem': 1},
+                        {'texto': 'Sempre que houver risco que não possa ser eliminado',
+                            'correta': True, 'ordem': 2},
+                        {'texto': 'Somente quando solicitado pelo supervisor',
+                            'correta': False, 'ordem': 3},
+                        {'texto': 'Apenas em caso de emergência',
+                            'correta': False, 'ordem': 4}
                     ]
                 },
                 {
@@ -1535,7 +1576,8 @@ def criar_tabelas():
                     'ordem': 3,
                     'pontos': 2.0,
                     'opcoes': [
-                        {'texto': 'O próprio trabalhador', 'correta': False, 'ordem': 1},
+                        {'texto': 'O próprio trabalhador',
+                            'correta': False, 'ordem': 1},
                         {'texto': 'O empregador', 'correta': True, 'ordem': 2},
                         {'texto': 'O sindicato', 'correta': False, 'ordem': 3},
                         {'texto': 'O governo', 'correta': False, 'ordem': 4}
@@ -1546,10 +1588,14 @@ def criar_tabelas():
                     'ordem': 4,
                     'pontos': 2.0,
                     'opcoes': [
-                        {'texto': 'Continuar usando normalmente', 'correta': False, 'ordem': 1},
-                        {'texto': 'Tentar consertá-lo', 'correta': False, 'ordem': 2},
-                        {'texto': 'Comunicar imediatamente e solicitar substituição', 'correta': True, 'ordem': 3},
-                        {'texto': 'Usar apenas em casos extremos', 'correta': False, 'ordem': 4}
+                        {'texto': 'Continuar usando normalmente',
+                            'correta': False, 'ordem': 1},
+                        {'texto': 'Tentar consertá-lo',
+                            'correta': False, 'ordem': 2},
+                        {'texto': 'Comunicar imediatamente e solicitar substituição',
+                            'correta': True, 'ordem': 3},
+                        {'texto': 'Usar apenas em casos extremos',
+                            'correta': False, 'ordem': 4}
                     ]
                 },
                 {
@@ -1557,14 +1603,18 @@ def criar_tabelas():
                     'ordem': 5,
                     'pontos': 2.0,
                     'opcoes': [
-                        {'texto': 'Proteger contra o sol', 'correta': False, 'ordem': 1},
-                        {'texto': 'Proteger contra impactos na cabeça', 'correta': True, 'ordem': 2},
-                        {'texto': 'Identificar o trabalhador', 'correta': False, 'ordem': 3},
-                        {'texto': 'Melhorar a aparência', 'correta': False, 'ordem': 4}
+                        {'texto': 'Proteger contra o sol',
+                            'correta': False, 'ordem': 1},
+                        {'texto': 'Proteger contra impactos na cabeça',
+                            'correta': True, 'ordem': 2},
+                        {'texto': 'Identificar o trabalhador',
+                            'correta': False, 'ordem': 3},
+                        {'texto': 'Melhorar a aparência',
+                            'correta': False, 'ordem': 4}
                     ]
                 }
             ]
-            
+
             for pergunta_data in perguntas_nr06:
                 pergunta = PerguntaAvaliacao(
                     avaliacao_id=avaliacao_nr06.id,
@@ -1574,7 +1624,7 @@ def criar_tabelas():
                 )
                 db.session.add(pergunta)
                 db.session.flush()
-                
+
                 for opcao_data in pergunta_data['opcoes']:
                     opcao = OpcaoResposta(
                         pergunta_id=pergunta.id,
@@ -1722,87 +1772,93 @@ def avaliacao_treinamento(treinamento_id):
     """Página de avaliação de um treinamento específico"""
     treinamento = Treinamento.query.get_or_404(treinamento_id)
     funcionario_id = 1  # TEMPORÁRIO - substituir por sessão real
-    
+
     # Verificar se o funcionário completou o vídeo
     progresso = ProgressoTreinamento.query.filter_by(
         funcionario_id=funcionario_id,
         treinamento_id=treinamento_id
     ).first()
-    
+
     if not progresso or not progresso.concluido:
         flash('Você precisa completar o treinamento antes de fazer a avaliação.', 'warning')
         return redirect(url_for('assistir_treinamento', treinamento_id=treinamento_id))
-    
+
     # Buscar avaliação do treinamento
-    avaliacao = Avaliacao.query.filter_by(treinamento_id=treinamento_id, ativo=True).first()
-    
+    avaliacao = Avaliacao.query.filter_by(
+        treinamento_id=treinamento_id, ativo=True).first()
+
     if not avaliacao:
         flash('Nenhuma avaliação disponível para este treinamento.', 'info')
         return redirect(url_for('assistir_treinamento', treinamento_id=treinamento_id))
-    
+
     # Verificar se já fez a avaliação
     resultado_existente = ResultadoAvaliacao.query.filter_by(
         funcionario_id=funcionario_id,
         avaliacao_id=avaliacao.id
     ).first()
-    
+
     if resultado_existente:
         return redirect(url_for('resultado_avaliacao', resultado_id=resultado_existente.id))
-    
+
     # Buscar perguntas ordenadas
     perguntas = PerguntaAvaliacao.query.filter_by(
         avaliacao_id=avaliacao.id
     ).order_by(PerguntaAvaliacao.ordem).all()
-    
+
     return render_template('avaliacao_treinamento.html',
-                         treinamento=treinamento,
-                         avaliacao=avaliacao,
-                         perguntas=perguntas)
+                           treinamento=treinamento,
+                           avaliacao=avaliacao,
+                           perguntas=perguntas)
+
 
 @app.route('/treinamentos/<int:treinamento_id>/avaliacao/submeter', methods=['POST'])
 def submeter_avaliacao(treinamento_id):
     """Submeter respostas da avaliação"""
     try:
         funcionario_id = 1  # TEMPORÁRIO - substituir por sessão real
-        avaliacao = Avaliacao.query.filter_by(treinamento_id=treinamento_id, ativo=True).first_or_404()
-        
+        avaliacao = Avaliacao.query.filter_by(
+            treinamento_id=treinamento_id, ativo=True).first_or_404()
+
         # Verificar se já fez a avaliação
         resultado_existente = ResultadoAvaliacao.query.filter_by(
             funcionario_id=funcionario_id,
             avaliacao_id=avaliacao.id
         ).first()
-        
+
         if resultado_existente:
             flash('Você já realizou esta avaliação.', 'warning')
             return redirect(url_for('resultado_avaliacao', resultado_id=resultado_existente.id))
-        
+
         # Processar respostas
-        perguntas = PerguntaAvaliacao.query.filter_by(avaliacao_id=avaliacao.id).all()
+        perguntas = PerguntaAvaliacao.query.filter_by(
+            avaliacao_id=avaliacao.id).all()
         pontos_obtidos = 0
         pontos_totais = sum(p.pontos for p in perguntas)
-        
+
         # Criar resultado
         resultado = ResultadoAvaliacao(
             funcionario_id=funcionario_id,
             avaliacao_id=avaliacao.id,
             nota_obtida=0,  # Será calculada
             aprovado=False,  # Será calculado
-            tempo_realizacao_segundos=request.form.get('tempo_realizacao', type=int)
+            tempo_realizacao_segundos=request.form.get(
+                'tempo_realizacao', type=int)
         )
         db.session.add(resultado)
         db.session.flush()  # Para obter o ID
-        
+
         # Processar cada resposta
         for pergunta in perguntas:
-            opcao_escolhida_id = request.form.get(f'pergunta_{pergunta.id}', type=int)
-            
+            opcao_escolhida_id = request.form.get(
+                f'pergunta_{pergunta.id}', type=int)
+
             if opcao_escolhida_id:
                 opcao_escolhida = OpcaoResposta.query.get(opcao_escolhida_id)
                 correta = opcao_escolhida.correta if opcao_escolhida else False
 
                 if correta:
                     pontos_obtidos += pergunta.pontos
-                
+
                 # Salvar resposta
                 resposta = RespostaFuncionario(
                     resultado_avaliacao_id=resultado.id,
@@ -1811,85 +1867,91 @@ def submeter_avaliacao(treinamento_id):
                     correta=correta
                 )
                 db.session.add(resposta)
-        
+
         # Calcular nota final (0-10)
-        nota_final = (pontos_obtidos / pontos_totais) * 10 if pontos_totais > 0 else 0
+        nota_final = (pontos_obtidos / pontos_totais) * \
+            10 if pontos_totais > 0 else 0
         aprovado = nota_final >= avaliacao.nota_minima_aprovacao
-        
+
         # Atualizar resultado
         resultado.nota_obtida = nota_final
         resultado.aprovado = aprovado
-        
+
         db.session.commit()
-        
+
         return redirect(url_for('resultado_avaliacao', resultado_id=resultado.id))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao processar avaliação: {str(e)}', 'error')
         return redirect(url_for('avaliacao_treinamento', treinamento_id=treinamento_id))
 
+
 @app.route('/avaliacao/resultado/<int:resultado_id>')
 def resultado_avaliacao(resultado_id):
     """Página com resultado da avaliação"""
     resultado = ResultadoAvaliacao.query.get_or_404(resultado_id)
-    
+
     # Verificar se o usuário pode ver este resultado
     funcionario_id = 1  # TEMPORÁRIO
     if resultado.funcionario_id != funcionario_id:
         flash('Acesso negado.', 'error')
         return redirect(url_for('index'))
-    
+
     return render_template('resultado_avaliacao.html', resultado=resultado)
+
 
 @app.route('/admin/avaliacoes')
 def admin_avaliacoes():
-
     """Página administrativa para gerenciar avaliações"""
     avaliacoes = Avaliacao.query.order_by(Avaliacao.data_criacao.desc()).all()
     treinamentos = Treinamento.query.filter_by(ativo=True).all()
-    
-    return render_template('admin_avaliacoes.html', 
-                         avaliacoes=avaliacoes,
-                         treinamentos=treinamentos)
+
+    return render_template('admin_avaliacoes.html',
+                           avaliacoes=avaliacoes,
+                           treinamentos=treinamentos)
 
 # ==================== SISTEMA DE AUTENTICAÇÃO ====================
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Página de login"""
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    
+
     if request.method == 'POST':
         cpf = request.form['cpf'].replace('.', '').replace('-', '').strip()
         senha = request.form['senha']
-        
+
         funcionario = Funcionario.query.filter_by(cpf=cpf).first()
-        
+
         if funcionario and funcionario.check_password(senha):
             if not funcionario.ativo:
-                flash('Sua conta está desativada. Entre em contato com o administrador.', 'error')
+                flash(
+                    'Sua conta está desativada. Entre em contato com o administrador.', 'error')
                 return render_template('login.html')
-            
+
             login_user(funcionario, remember=request.form.get('remember'))
             funcionario.data_ultimo_login = datetime.now()
             db.session.commit()
-            
+
             # Redirecionar para próxima página ou dashboard
             next_page = request.args.get('next')
             if funcionario.primeiro_login:
-                flash('Bem-vindo! Este é seu primeiro acesso. Considere alterar sua senha.', 'info')
+                flash(
+                    'Bem-vindo! Este é seu primeiro acesso. Considere alterar sua senha.', 'info')
                 funcionario.primeiro_login = False
                 db.session.commit()
                 return redirect(next_page) if next_page else redirect(url_for('alterar_senha'))
-            
+
             flash(f'Bem-vindo(a), {funcionario.nome}!', 'success')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
             flash('CPF ou senha incorretos.', 'error')
-    
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required
@@ -1899,6 +1961,7 @@ def logout():
     flash('Você foi desconectado com sucesso.', 'info')
     return redirect(url_for('login'))
 
+
 @app.route('/alterar-senha', methods=['GET', 'POST'])
 @login_required
 def alterar_senha():
@@ -1907,7 +1970,7 @@ def alterar_senha():
         senha_atual = request.form['senha_atual']
         nova_senha = request.form['nova_senha']
         confirmar_senha = request.form['confirmar_senha']
-        
+
         if not current_user.check_password(senha_atual):
             flash('Senha atual incorreta.', 'error')
         elif nova_senha != confirmar_senha:
@@ -1920,14 +1983,16 @@ def alterar_senha():
             db.session.commit()
             flash('Senha alterada com sucesso!', 'success')
             return redirect(url_for('index'))
-    
+
     return render_template('alterar_senha.html')
+
 
 @app.route('/perfil')
 @login_required
 def perfil():
     """Página do perfil do usuário"""
     return render_template('perfil.html', funcionario=current_user)
+
 
 @app.route('/admin/criar-usuario', methods=['GET', 'POST'])
 @login_required
@@ -1936,13 +2001,14 @@ def criar_usuario():
     if not current_user.admin:
         flash('Acesso negado. Apenas administradores podem criar usuários.', 'error')
         return redirect(url_for('index'))
-    
+
     if request.method == 'POST':
         nome = request.form['nome'].strip()
         cpf = request.form['cpf'].replace('.', '').replace('-', '').strip()
-        senha_inicial = request.form.get('senha_inicial', cpf[:6])  # Primeiros 6 dígitos do CPF como padrão
+        # Primeiros 6 dígitos do CPF como padrão
+        senha_inicial = request.form.get('senha_inicial', cpf[:6])
         admin = 'admin' in request.form
-        
+
         # Verificar se CPF já existe
         if Funcionario.query.filter_by(cpf=cpf).first():
             flash('Já existe um funcionário com este CPF.', 'error')
@@ -1956,14 +2022,16 @@ def criar_usuario():
                 telefone=request.form.get('telefone', '')
             )
             funcionario.set_password(senha_inicial)
-            
+
             db.session.add(funcionario)
             db.session.commit()
-            
-            flash(f'Usuário {nome} criado com sucesso! Senha inicial: {senha_inicial}', 'success')
+
+            flash(
+                f'Usuário {nome} criado com sucesso! Senha inicial: {senha_inicial}', 'success')
             return redirect(url_for('funcionarios'))
-    
+
     return render_template('criar_usuario.html')
+
 
 @app.route('/admin/reset-senha/<int:funcionario_id>', methods=['POST'])
 @login_required
@@ -1972,15 +2040,16 @@ def reset_senha(funcionario_id):
     if not current_user.admin:
         flash('Acesso negado.', 'error')
         return redirect(url_for('funcionarios'))
-    
+
     funcionario = Funcionario.query.get_or_404(funcionario_id)
     nova_senha = funcionario.cpf[:6]  # Primeiros 6 dígitos do CPF
-    
+
     funcionario.set_password(nova_senha)
     funcionario.primeiro_login = True
     db.session.commit()
-    
-    flash(f'Senha de {funcionario.nome} resetada para: {nova_senha}', 'success')
+
+    flash(
+        f'Senha de {funcionario.nome} resetada para: {nova_senha}', 'success')
     return redirect(url_for('funcionarios'))
 
 
@@ -1988,7 +2057,36 @@ def reset_senha(funcionario_id):
 def load_user(user_id):
     return Funcionario.query.get(int(user_id))
 
+
 if __name__ == '__main__':
     with app.app_context():
         criar_tabelas()
-    app.run(debug=True)
+
+    # Configuração para acesso em rede
+    import socket
+
+    # Obter IP local
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
+    print("🚀 Iniciando Sistema de Treinamentos NR...")
+    print("=" * 60)
+    print(f"📍 Servidor rodando em:")
+    print(f"   🏠 Local: http://127.0.0.1:5000")
+    print(f"   🌐 Rede:  http://{local_ip}:5000")
+    print("=" * 60)
+    print("📱 Para acessar de outros dispositivos na rede:")
+    print(f"   Digite no navegador: http://{local_ip}:5000")
+    print("=" * 60)
+    print("⚠️  IMPORTANTE:")
+    print("   - Certifique-se que o firewall permite conexões na porta 5000")
+    print("   - Todos os dispositivos devem estar na mesma rede")
+    print("=" * 60)
+
+    # Executar o servidor
+    app.run(
+        host='0.0.0.0',  # Permite conexões de qualquer IP
+        port=5000,       # Porta padrão
+        debug=True,      # Modo debug para desenvolvimento
+        threaded=True    # Permite múltiplas conexões simultâneas
+    )
