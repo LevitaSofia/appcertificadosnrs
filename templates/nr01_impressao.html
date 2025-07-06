@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ordem de Serviço - NR01 - {{ funcionario.nome }}</title>
+  <style>
+    /* Estilos globais para toda a página */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      font-size: 16px;
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    .no-print {
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-box {
+      border: 2px solid #cc0000;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .company-name {
+      color: #cc0000;
+      font-weight: bold;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .address-info {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .main-title {
+      background-color: #cc0000;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .form-section {
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: white;
+    }
+
+    .employee-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .employee-info label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .employee-info .value {
+      flex: 1;
+      border-bottom: 1px solid #333;
+      padding: 5px;
+      min-width: 200px;
+    }
+
+    .section-title {
+      background-color: #cc0000;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+
+    .description {
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #cc0000;
+      color: white;
+      font-weight: bold;
+    }
+
+    .risk-table th {
+      font-size: 11px;
+    }
+
+    .risk-table td {
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .epi-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .epi-column ul {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+
+    .epi-column li {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .procedures-list {
+      list-style-type: decimal;
+      padding-left: 25px;
+    }
+
+    .procedures-list li {
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .procedures-list ul {
+      list-style-type: disc;
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+
+    .signature-section {
+      margin-top: 40px;
+      page-break-inside: avoid;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .signature-box {
+      flex: 1;
+      min-width: 250px;
+      text-align: center;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .signature-line {
+      border-bottom: 1px solid #000;
+      margin-bottom: 10px;
+      height: 50px;
+    }
+
+    .observations {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+
+    .observations h3 {
+      color: #cc0000;
+      margin-bottom: 15px;
+    }
+
+    .observations p {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .print-buttons {
+      text-align: center;
+      margin-bottom: 20px;
+      gap: 10px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 5px;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    /* Estilos para impressão */
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+        font-size: 12px;
+      }
+      
+      .no-print {
+        display: none !important;
+      }
+
+      .print-only {
+        display: block !important;
+      }
+      
+      .container {
+        box-shadow: none;
+        padding: 10px;
+        max-width: none;
+        margin: 0;
+      }
+      
+      .main-title, .section-title {
+        font-size: 14px;
+        padding: 10px;
+        break-inside: avoid;
+      }
+
+      .form-section {
+        break-inside: avoid;
+        margin: 10px 0;
+        padding: 10px;
+      }
+
+      .table-container {
+        break-inside: avoid;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px;
+      }
+
+      .signature-section {
+        break-inside: avoid;
+        margin-top: 20px;
+      }
+
+      .observations {
+        break-inside: avoid;
+      }
+
+      .employee-info {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .employee-info .value {
+        min-width: auto;
+        width: 100%;
+      }
+
+      @page {
+        margin: 1cm;
+        size: A4;
+      }
+    }
+
+    /* Responsividade */
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      .employee-info {
+        flex-direction: column;
+      }
+
+      .signature-row {
+        flex-direction: column;
+      }
+
+      .epi-list {
+        grid-template-columns: 1fr;
+      }
+
+      .print-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Botões de ação (não aparecem na impressão) -->
+  <div class="no-print print-buttons">
+    <button onclick="window.print()" class="btn btn-primary">
+      <i class="fas fa-print"></i> Imprimir / Salvar como PDF
+    </button>
+    <a href="{{ url_for('nr01_selecionar') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+    <button onclick="window.close()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Fechar
+    </button>
+  </div>
+
+  <div class="container">
+    <!-- Cabeçalho -->
+    <div class="header-box">
+      <div class="company-name">ALTA TELAS REDES DE PROTEÇÃO - LTDA</div>
+      <div class="address-info">
+        RUA: PADRE BENTO DIAS PACHECO BAIRRO: GERALDO CORREIA DE CARVALHO N° 480<br>
+        CEP: 14061-470 - Ribeirão Preto - São Paulo - Brasil<br>
+        CNPJ: 20.017.812/0001-57
+      </div>
+    </div>
+
+    <div class="main-title">ORDEM DE SERVIÇO - NR01</div>
+
+    <!-- Informações do Funcionário -->
+    <div class="form-section">
+      <div class="employee-info">
+        <div style="flex: 1;">
+          <label>Nome:</label>
+          <span class="value">{{ funcionario.nome }}</span>
+        </div>
+        <div style="flex: 1;">
+          <label>CPF:</label>
+          <span class="value">{{ funcionario.cpf }}</span>
+        </div>
+      </div>
+      <div class="employee-info">
+        <div style="width: 100%;">
+          <label>Cargo:</label>
+          <span class="value" style="font-weight: bold;">{{ funcionario.cargo }}</span>
+        </div>
+      </div>
+      
+      <p style="margin-top: 15px; text-align: justify; line-height: 1.6;">
+        Pela presente Ordem de Serviço, objetivamos informar os trabalhadores que executam suas atividades laborais nesse setor,
+        conforme estabelece a NR-1, item 1.7, sobre as condições de segurança e saúde às quais estão expostos, como medida preventiva e,
+        tendo como parâmetro os agentes físicos, químicos, e biológicos citados na NR-9 – Programa de Prevenção de Riscos Ambientais (Lei n° 6.514 de 22/12/1977, Portaria n° 3.214 de 08/06/1978),
+        bem como os procedimentos de aplicação da NR-6 – Equipamento de Proteção Individual – EPI, NR-17 – Ergonomia,
+        de forma a padronizar comportamentos para prevenir acidentes e/ou doenças ocupacionais.
+      </p>
+    </div>
+
+    <!-- Descrição das Atividades -->
+    <div class="section-title">DESCRIÇÃO DAS ATIVIDADES</div>
+    <div class="form-section">
+      <div class="description">Atividade: Ajudar o instalador a instalar de rede de polietileno para a proteção em sacadas, janelas e quadras.
+
+Descrição: O trabalhador deve auxiliar o instalador principal na montagem e instalação de redes de proteção em diferentes ambientes, seguindo rigorosamente as normas de segurança estabelecidas pela empresa e pela legislação vigente.
+
+Principais responsabilidades:
+• Auxiliar na preparação dos materiais necessários para a instalação
+• Seguir as instruções do instalador principal
+• Utilizar adequadamente os equipamentos de proteção individual (EPIs)
+• Manter a área de trabalho organizada e segura
+• Comunicar imediatamente qualquer situação de risco identificada
+• Participar dos treinamentos de segurança obrigatórios</div>
+    </div>
+
+    <!-- Riscos Identificados -->
+    <div class="section-title">INVENTÁRIO DE RISCOS - PGR</div>
+    <div class="form-section">
+      <div class="table-container">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th style="width: 8%;">Agente</th>
+              <th style="width: 10%;">Perigo</th>
+              <th style="width: 15%;">Fontes ou circunstâncias</th>
+              <th style="width: 15%;">Possíveis lesões</th>
+              <th style="width: 8%;">Tipo Avaliação</th>
+              <th style="width: 8%;">Intensidade</th>
+              <th style="width: 6%;">Tempo</th>
+              <th style="width: 4%;">N.A</th>
+              <th style="width: 4%;">LT</th>
+              <th style="width: 8%;">Metodologia</th>
+              <th style="width: 3%;">P</th>
+              <th style="width: 3%;">S</th>
+              <th style="width: 4%;">N.R</th>
+              <th style="width: 8%;">Classificação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="background-color: #4CAF50; color: white;">Físico</td>
+              <td>Ruído</td>
+              <td>Máquinas e equipamentos da área de produção</td>
+              <td>Cansaço, irritação, dores de cabeça, surdez temporária, perda auditiva permanente</td>
+              <td>Quantitativa</td>
+              <td>81,78 dB(A)</td>
+              <td>3h 30m</td>
+              <td>80dB(A)</td>
+              <td>85dB(A)</td>
+              <td>NHO 01</td>
+              <td>5</td>
+              <td>3</td>
+              <td>15</td>
+              <td style="background-color: #4CAF50; color: white;">Risco Baixo</td>
+            </tr>
+            <tr>
+              <td style="background-color: #4CAF50; color: white;">Físico</td>
+              <td>Radiação solar</td>
+              <td>Luz solar</td>
+              <td>Queimaduras, câncer de pele, náuseas, tonturas</td>
+              <td>Qualitativa</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>5</td>
+              <td>5</td>
+              <td>25</td>
+              <td style="background-color: #FFD700; color: black;">Risco Médio</td>
+            </tr>
+            <tr>
+              <td style="background-color: #FFD700; color: black;">Ergonômico</td>
+              <td>Postura em pé por longos períodos</td>
+              <td>A atividade exige postura em pé por locomoção do trabalhador</td>
+              <td>Alterações do sistema osteomuscular, fadiga física, lombalgia</td>
+              <td>Qualitativa</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>ISO 11228-2</td>
+              <td>4</td>
+              <td>5</td>
+              <td>20</td>
+              <td style="background-color: #4CAF50; color: white;">Risco Baixo</td>
+            </tr>
+            <tr>
+              <td style="background-color: #00BFFF; color: white;">Acidentes</td>
+              <td>Queda de diferente nível (trabalho em altura)</td>
+              <td>Acesso a locais acima de 2,00 metros para instalação</td>
+              <td>Morte, fraturas internas e externas, lesões e traumatismos</td>
+              <td>Qualitativa</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>N/A</td>
+              <td>6</td>
+              <td>6</td>
+              <td>36</td>
+              <td style="background-color: #FF4444; color: white;">Risco Alto</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EPIs Obrigatórios -->
+    <div class="section-title">EQUIPAMENTOS DE PROTEÇÃO INDIVIDUAL (EPIs) OBRIGATÓRIOS</div>
+    <div class="form-section">
+      <div class="epi-list">
+        <div class="epi-column">
+          <ul>
+            <li>Calçado de segurança com biqueira de PVC</li>
+            <li>Capacete com Jugular</li>
+            <li>Protetor Auricular adequado ao canal auditivo</li>
+            <li>Respirador PFF1</li>
+          </ul>
+        </div>
+        <div class="epi-column">
+          <ul>
+            <li>Protetor Solar, Touca Árabe, Uniforme de Manga Comprida</li>
+            <li>Cinto tipo paraquedista, talabarte duplo</li>
+            <li>Óculos de Proteção e Luva multitato</li>
+            <li>Luva de raspa</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Procedimentos de Segurança -->
+    <div class="section-title">ORIENTAÇÕES DE SEGURANÇA DO TRABALHO</div>
+    <div class="form-section">
+      <ol class="procedures-list">
+        <li>Não transite pela obra sem capacete e calçado de segurança.</li>
+        <li>Use seus EPI's apenas para a finalidade a que se destinam e mantenha-os sob sua guarda e conservação;</li>
+        <li>Observe atentamente o meio ambiente do trabalho ao circular na obra, e corrija as condições inseguras encontradas, imediatamente;</li>
+        <li>Use corretamente o cinto de segurança ligado a um cabo de segurança, para trabalhos em altura superior a 2,00 metros;</li>
+        <li>Verifique as condições gerais das ferramentas manuais e elétricas antes de usá-las;</li>
+        <li>Não improvise extensões elétricas, e nem conserte equipamentos elétricos defeituosos. Chame o eletricista.</li>
+      </ol>
+    </div>
+
+    <!-- Procedimentos em Caso de Acidente -->
+    <div class="section-title">PROCEDIMENTO EM CASO DE ACIDENTE DE TRABALHO</div>
+    <div class="form-section">
+      <ol class="procedures-list">
+        <li>Comunicar imediatamente a supervisão quando da ocorrência de quaisquer acidentes, ou surgir qualquer tipo de doença profissional;</li>
+        <li>Prestar informações verdadeiras para o preenchimento da ficha de acidente;</li>
+        <li>Solicitar ao RH abertura da CAT – Comunicação de Acidente do Trabalho, após a caracterização do acidente;</li>
+        <li>Em caso de acidentes de trajeto, além de entrar em contato imediato com a empresa, permanecer no local e prestar todas as informações exigidas pelas autoridades.</li>
+      </ol>
+    </div>
+
+    <!-- Termo de Responsabilidade -->
+    <div class="section-title">TERMO DE RESPONSABILIDADE</div>
+    <div class="form-section">
+      <p style="margin-bottom: 15px; text-align: justify; line-height: 1.6;">
+        De acordo com o Artigo 158, Parágrafo Único, da lei 6.514/77 e da Norma Regulamentadora NR-1, 
+        <strong>a recusa ao fiel cumprimento desta ORDEM DE SERVIÇO, no todo ou em parte, constituirá ATO FALTOSO</strong> 
+        sujeitando o funcionário às penalidades previstas na lei.
+      </p>
+      
+      <p style="margin-bottom: 20px; text-align: justify; line-height: 1.6;">
+        Declaro que fui plenamente orientado quanto aos procedimentos de segurança do trabalho, estando ciente dos riscos 
+        decorrentes da atividade e das sanções disciplinares a que estou sujeito quanto ao seu descumprimento.
+      </p>
+    </div>
+
+    <!-- Assinaturas -->
+    <div class="signature-section">
+      <div class="signature-row">
+        <div class="signature-box">
+          <p><strong>Data:</strong> {{ data_hoje }}</p>
+        </div>
+      </div>
+
+      <div class="signature-row">
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <p><strong>JONATAS SOUZA DE MORAES</strong></p>
+          <p>Técnico de Segurança do Trabalho</p>
+          <p>MTB: 0133219/SP</p>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <p><strong>{{ funcionario.nome }}</strong></p>
+          <p>Colaborador</p>
+          <p>{{ funcionario.cargo }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observações -->
+    <div class="observations">
+      <h3>OBSERVAÇÕES IMPORTANTES</h3>
+      <p><strong>1.</strong> Esta Ordem de Serviço deve ser lida e compreendida antes do início das atividades.</p>
+      <p><strong>2.</strong> O não cumprimento das normas de segurança pode resultar em acidentes graves.</p>
+      <p><strong>3.</strong> Qualquer dúvida sobre os procedimentos deve ser esclarecida com o supervisor imediato.</p>
+      <p><strong>4.</strong> Esta OS deve ser mantida no local de trabalho durante toda a execução da atividade.</p>
+      <p><strong>5.</strong> Em caso de emergência, acionar imediatamente o supervisor e os serviços de emergência.</p>
+    </div>
+  </div>
+
+  <!-- Instruções para impressão (não aparecem na impressão) -->
+  <div class="no-print" style="text-align: center; margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 5px;">
+    <h4>📝 Como salvar como PDF:</h4>
+    <p><strong>1.</strong> Clique em "Imprimir / Salvar como PDF"</p>
+    <p><strong>2.</strong> Na janela de impressão, escolha "Salvar como PDF" como destino</p>
+    <p><strong>3.</strong> Configure para orientação "Retrato" e tamanho "A4"</p>
+    <p><strong>4.</strong> Clique em "Salvar" e escolha onde salvar o arquivo</p>
+  </div>
+
+  <script>
+    // Auto-impressão se for aberto em nova janela
+    if (window.location !== window.parent.location) {
+      // É uma popup ou nova aba
+      window.onload = function() {
+        setTimeout(function() {
+          if (confirm('Deseja imprimir ou salvar como PDF agora?')) {
+            window.print();
+          }
+        }, 1000);
+      };
+    }
+  </script>
+</body>
+</html>
