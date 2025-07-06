@@ -372,7 +372,7 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
         data_formatada = data_emissao.strftime('%d/%m/%Y')
         data_admissao_formatada = funcionario.data_admissao.strftime(
             '%d/%m/%Y') if funcionario.data_admissao else 'Não informado'
-        
+
         # Converter tipo_treinamento para exibição no certificado
         tipos_treinamento_display = {
             'Inicial_Admissional': 'Treinamento Inicial/Admissional',
@@ -380,7 +380,8 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
             'Atualizacao': 'Atualização',
             'Complementar': 'Complementar'
         }
-        tipo_treinamento_display = tipos_treinamento_display.get(tipo_treinamento, tipo_treinamento)
+        tipo_treinamento_display = tipos_treinamento_display.get(
+            tipo_treinamento, tipo_treinamento)
 
         substituicoes = {
             '{{NOME}}': funcionario.nome,
@@ -809,7 +810,6 @@ def api_cargos():
 # ==================== CENTRAL DE TREINAMENTOS ====================
 
 @app.route('/treinamentos', endpoint='treinamentos')
-@login_required
 def modulos_treinamento():
     """Página que exibe os módulos de NR disponíveis."""
     modulos = db.session.query(Treinamento.tipo_nr).distinct().order_by(
@@ -2058,17 +2058,208 @@ def load_user(user_id):
     return Funcionario.query.get(int(user_id))
 
 
+@app.route('/nr01/<int:funcionario_id>')
+def nr01_certificado(funcionario_id):
+    """Exibe o certificado NR01 com dados do funcionário preenchidos"""
+    funcionario = Funcionario.query.get_or_404(funcionario_id)
+
+    # Preparar dados para o template
+    dados_funcionario = {
+        'nome': funcionario.nome,
+        'cpf': funcionario.cpf_formatado,
+        'cargo': funcionario.funcao if funcionario.funcao else 'AJUDANTE DE INSTALADOR DE TELAS',
+        'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
+        'data_nascimento': funcionario.data_nascimento.strftime('%d/%m/%Y') if funcionario.data_nascimento else '',
+        'rg': funcionario.rg if funcionario.rg else '',
+        'telefone': funcionario.telefone if funcionario.telefone else '',
+        'email': funcionario.email if funcionario.email else ''
+    }
+
+    # Data atual para preenchimento automático
+    data_hoje = datetime.now().strftime('%d/%m/%Y')
+
+    return render_template('nr01.html', funcionario=dados_funcionario, data_hoje=data_hoje)
+
+
+@app.route('/nr01')
+def nr01_selecionar():
+    """Página para selecionar funcionário para o certificado NR01"""
+    funcionarios = Funcionario.query.filter_by(ativo=True).all()
+    return render_template('nr01_selecionar.html', funcionarios=funcionarios)
+
+
+@app.route('/processar_nr01', methods=['POST'])
+def processar_nr01():
+    """Processa a geração do certificado NR01 em PDF"""
+    funcionario_id = request.form.get('funcionario_id')
+
+    if not funcionario_id:
+        flash('Funcionário não selecionado', 'error')
+        return redirect(url_for('nr01_selecionar'))
+
+    funcionario = Funcionario.query.get_or_404(funcionario_id)
+
+    try:
+        # Gerar o certificado NR01 em PDF
+        sucesso, resultado = gerar_nr01_pdf(funcionario)
+
+        if sucesso:
+            flash('Certificado NR01 gerado com sucesso!', 'success')
+            return send_file(resultado, as_attachment=True, download_name=f'NR01_{funcionario.nome}_{datetime.now().strftime("%Y%m%d")}.pdf')
+        else:
+            flash(f'Erro ao gerar certificado: {resultado}', 'error')
+            return redirect(url_for('nr01_selecionar'))
+
+    except Exception as e:
+        flash(f'Erro interno: {str(e)}', 'error')
+        return redirect(url_for('nr01_selecionar'))
+
+
+def gerar_nr01_pdf(funcionario):
+    """Gera o certificado NR01 em PDF usando o template HTML"""
+    try:
+        from weasyprint import HTML, CSS
+        import tempfile
+
+        # Preparar dados para o template
+        dados_funcionario = {
+            'nome': funcionario.nome,
+            'cpf': funcionario.cpf_formatado,
+            'cargo': funcionario.funcao if funcionario.funcao else 'AJUDANTE DE INSTALADOR DE TELAS',
+            'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
+            'data_nascimento': funcionario.data_nascimento.strftime('%d/%m/%Y') if funcionario.data_nascimento else '',
+            'rg': funcionario.rg if funcionario.rg else '',
+            'telefone': funcionario.telefone if funcionario.telefone else '',
+            'email': funcionario.email if funcionario.email else ''
+        }
+
+        # Data atual
+        data_hoje = datetime.now().strftime('%d/%m/%Y')
+
+        # Renderizar o template HTML
+        html_content = render_template(
+            'nr01_pdf.html', funcionario=dados_funcionario, data_hoje=data_hoje)
+
+        # Criar pasta do funcionário se não existir
+        nome_funcionario_limpo = re.sub(r'[<>:"/\\|?*]', '_', funcionario.nome)
+        pasta_funcionario = os.path.join(
+            'certificados', nome_funcionario_limpo)
+        os.makedirs(pasta_funcionario, exist_ok=True)
+
+        # Nome do arquivo PDF
+        data_formatada = datetime.now().strftime('%Y-%m-%d')
+        nome_arquivo = f"{nome_funcionario_limpo}_{data_formatada}_NR01.pdf"
+        caminho_pdf = os.path.join(pasta_funcionario, nome_arquivo)
+
+        # Converter HTML para PDF
+        HTML(string=html_content).write_pdf(caminho_pdf)
+
+        # Registrar no banco de dados
+        certificado = CertificadoGerado(
+            funcionario_id=funcionario.id,
+            tipo_nr='NR01',
+            tipo_treinamento='Ordem de Serviço',
+            data_emissao=datetime.now().date(),
+            caminho_arquivo=caminho_pdf
+        )
+        db.session.add(certificado)
+        db.session.commit()
+
+        return True, caminho_pdf
+
+    except ImportError:
+        # Se WeasyPrint não estiver instalado, usar método alternativo
+        return gerar_nr01_pdf_alternativo(funcionario)
+    except Exception as e:
+        print(f"Erro ao gerar NR01 PDF: {str(e)}")
+        return False, str(e)
+
+
+def gerar_nr01_pdf_alternativo(funcionario):
+    """Método alternativo para gerar NR01 em PDF usando wkhtmltopdf"""
+    try:
+        import pdfkit
+
+        # Preparar dados para o template
+        dados_funcionario = {
+            'nome': funcionario.nome,
+            'cpf': funcionario.cpf_formatado,
+            'cargo': funcionario.funcao if funcionario.funcao else 'AJUDANTE DE INSTALADOR DE TELAS',
+            'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
+            'data_nascimento': funcionario.data_nascimento.strftime('%d/%m/%Y') if funcionario.data_nascimento else '',
+            'rg': funcionario.rg if funcionario.rg else '',
+            'telefone': funcionario.telefone if funcionario.telefone else '',
+            'email': funcionario.email if funcionario.email else ''
+        }
+
+        # Data atual
+        data_hoje = datetime.now().strftime('%d/%m/%Y')
+
+        # Renderizar o template HTML
+        html_content = render_template(
+            'nr01_pdf.html', funcionario=dados_funcionario, data_hoje=data_hoje)
+
+        # Criar pasta do funcionário se não existir
+        nome_funcionario_limpo = re.sub(r'[<>:"/\\|?*]', '_', funcionario.nome)
+        pasta_funcionario = os.path.join(
+            'certificados', nome_funcionario_limpo)
+        os.makedirs(pasta_funcionario, exist_ok=True)
+
+        # Nome do arquivo PDF
+        data_formatada = datetime.now().strftime('%Y-%m-%d')
+        nome_arquivo = f"{nome_funcionario_limpo}_{data_formatada}_NR01.pdf"
+        caminho_pdf = os.path.join(pasta_funcionario, nome_arquivo)
+
+        # Opções do wkhtmltopdf
+        options = {
+            'page-size': 'A4',
+            'margin-top': '0.75in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.75in',
+            'margin-left': '0.75in',
+            'encoding': "UTF-8",
+            'no-outline': None,
+            'enable-local-file-access': None
+        }
+
+        # Converter HTML para PDF
+        pdfkit.from_string(html_content, caminho_pdf, options=options)
+
+        # Registrar no banco de dados
+        certificado = CertificadoGerado(
+            funcionario_id=funcionario.id,
+            tipo_nr='NR01',
+            tipo_treinamento='Ordem de Serviço',
+            data_emissao=datetime.now().date(),
+            caminho_arquivo=caminho_pdf
+        )
+        db.session.add(certificado)
+        db.session.commit()
+
+        return True, caminho_pdf
+
+    except ImportError:
+        return False, "Nenhuma biblioteca de conversão PDF disponível. Instale WeasyPrint ou wkhtmltopdf"
+    except Exception as e:
+        print(f"Erro ao gerar NR01 PDF (alternativo): {str(e)}")
+        return False, str(e)
+
+
+@app.route('/nr01_preview')
+def nr01_preview():
+    """Visualiza o modelo NR01 sem dados específicos"""
+    data_hoje = datetime.now().strftime('%d/%m/%Y')
+    return render_template('nr01.html', funcionario=None, data_hoje=data_hoje)
+
+
 if __name__ == '__main__':
     with app.app_context():
-        criar_tabelas()
+        db.create_all()
 
     # Configuração para acesso em rede
     import socket
-
-    # Obter IP local
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
-
     print("🚀 Iniciando Sistema de Treinamentos NR...")
     print("=" * 60)
     print(f"📍 Servidor rodando em:")
@@ -2082,11 +2273,4 @@ if __name__ == '__main__':
     print("   - Certifique-se que o firewall permite conexões na porta 5000")
     print("   - Todos os dispositivos devem estar na mesma rede")
     print("=" * 60)
-
-    # Executar o servidor
-    app.run(
-        host='0.0.0.0',  # Permite conexões de qualquer IP
-        port=5000,       # Porta padrão
-        debug=True,      # Modo debug para desenvolvimento
-        threaded=True    # Permite múltiplas conexões simultâneas
-    )
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)

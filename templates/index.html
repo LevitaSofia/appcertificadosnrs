@@ -28,7 +28,9 @@
                 <p class="card-text">{{ funcionarios|length }} funcionários cadastrados</p>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('funcionarios') }}" class="btn btn-outline-primary">Ver Todos</a>
+                    {% if current_user.is_authenticated and current_user.admin %}
                     <a href="{{ url_for('cadastrar_funcionario') }}" class="btn btn-primary">Cadastrar Novo</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -67,6 +69,7 @@
     </div>
 
     <!-- Card Relatórios -->
+    {% if current_user.is_authenticated and current_user.admin %}
     <div class="col-md-6 col-lg-3">
         <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
@@ -81,6 +84,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Segunda linha de cards -->
@@ -96,13 +100,16 @@
                 <p class="card-text">Vídeos de treinamento por NR</p>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('treinamentos') }}" class="btn btn-outline-primary">Assistir Vídeos</a>
+                    {% if current_user.is_authenticated and current_user.admin %}
                     <a href="{{ url_for('treinamentos_admin') }}" class="btn btn-primary">Gerenciar Vídeos</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Card Configurações -->
+    {% if current_user.is_authenticated and current_user.admin %}
     <div class="col-md-6 col-lg-3">
         <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
@@ -113,6 +120,24 @@
                 <p class="card-text">Modelos de NR e configurações</p>
                 <div class="d-grid">
                     <a href="{{ url_for('configuracoes') }}" class="btn btn-secondary">Configurar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Card NR01 - Ordem de Serviço -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm border-danger">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-file-alt text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">NR01 - Ordem de Serviço</h5>
+                <p class="card-text">Gere ordem de serviço personalizada</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('nr01_selecionar') }}" class="btn btn-outline-danger">Gerar NR01</a>
+                    <a href="{{ url_for('nr01_preview') }}" class="btn btn-danger" target="_blank">Ver Modelo</a>
                 </div>
             </div>
         </div>
