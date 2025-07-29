@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Ordem de Serviço - NR01 - Técnico de Segurança</title>
+  <style>
+    /* Mesmos estilos da NR01 original */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .header-box {
+      border: 2px solid #cc0000;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-box img {
+      width: 180px;
+      height: auto;
+      border: 2px solid #cc0000;
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .header-content {
+      flex: 1;
+      text-align: center;
+    }
+
+    .company-name {
+      color: #cc0000;
+      font-weight: bold;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .address-info {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .main-title {
+      background-color: #cc0000;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .form-section {
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: white;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    .description,
+    .risk,
+    .epi-title,
+    .section-title {
+      background-color: #cc0000;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+      margin: 20px auto;
+      border-radius: 8px;
+      max-width: 100%;
+    }
+
+    .measures-list,
+    .safety-list,
+    .accident-list {
+      list-style-type: disc;
+      padding-left: 25px;
+      margin: 0;
+    }
+
+    .measures-list li,
+    .safety-list li,
+    .accident-list li {
+      margin-bottom: 15px;
+      line-height: 1.5;
+      font-size: 16px;
+      text-align: justify;
+    }
+
+    .signature-container {
+      margin-top: 40px;
+      padding: 20px;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .signature-column {
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .signature-line {
+      border-bottom: 1px solid #000;
+      margin: 10px 0;
+      min-width: 200px;
+    }
+
+    .signature-image {
+      max-width: 180px;
+      max-height: 60px;
+      margin-bottom: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .date-input,
+    .employee-input,
+    .tech-input {
+      width: 100%;
+      text-align: center;
+      font-size: 16px;
+      padding: 5px;
+      border: none;
+      border-bottom: 1px dashed #999;
+      margin-bottom: 10px;
+    }
+
+    .tech-info {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header-box">
+    <img src="{{ url_for('static', filename='img/Alta Telas 10 anos.jpeg') }}" alt="Logo da Empresa">
+    <div class="header-content">
+      <div class="company-name">ALTA TELAS REDES DE PROTEÇÃO - LTDA</div>
+      <div class="address-info">
+        RUA: PADRE BENTO DIAS PACHECO BAIRRO: GERALDO CORREIA DE CARVALHO N° 480<br>
+        CEP: 14061-470 - Ribeirão Preto - São Paulo - Brasil<br>
+        CNPJ: 20.017.812/0001-57
+      </div>
+    </div>
+  </div>
+
+  <div class="main-title">ORDEM DE SERVIÇO - NR01 - TÉCNICO DE SEGURANÇA</div>
+
+  <div class="form-section">
+    <div style="margin-bottom: 15px;">
+      <label for="nome">Nome:</label><br>
+      <input type="text" id="nome" name="nome"
+        value="{{ funcionario.nome if funcionario else '' }}" style="width: 60%;">
+    </div>
+    
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 200px;">
+        <label for="cpf">CPF:</label><br>
+        <input type="text" id="cpf" name="cpf"
+          value="{{ funcionario.cpf if funcionario else '' }}" style="width: 100%;">
+      </div>
+      
+      <div style="flex: 1; min-width: 200px;">
+        <label for="data_admissao">Data de Admissão:</label><br>
+        <input type="text" id="data_admissao" name="data_admissao"
+          value="{{ funcionario.data_admissao if funcionario else '' }}" style="width: 100%;">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <label for="cargo">Cargo:</label> 
+    <input type="text" id="cargo" name="cargo"
+      value="{{ funcionario.funcao if funcionario else 'TÉCNICO DE SEGURANÇA DO TRABALHO' }}"
+      style="width: 100%; font-weight: bold;">
+    <p style="margin-top: 10px; text-align: justify;">
+      Pela presente Ordem de Serviço, objetivamos informar o Técnico de Segurança do Trabalho sobre suas responsabilidades
+      na supervisão e orientação dos demais trabalhadores, conforme estabelece a NR-1, item 1.7, sobre as condições de 
+      segurança e saúde no ambiente de trabalho, bem como os procedimentos de aplicação das Normas Regulamentadoras,
+      de forma a garantir a segurança de toda a equipe e prevenir acidentes e/ou doenças ocupacionais.
+    </p>
+  </div>
+
+  <div class="description">DESCRIÇÃO DAS ATIVIDADES</div>
+  <div class="form-section">
+    <textarea id="descricao" name="descricao">Supervisionar e orientar os trabalhadores quanto às normas de segurança do trabalho.
+Realizar inspeções de segurança nos locais de trabalho.
+Elaborar e ministrar treinamentos sobre uso correto de EPIs.
+Acompanhar trabalhos em altura e verificar equipamentos de proteção.
+Investigar acidentes e incidentes de trabalho.
+Elaborar relatórios de segurança e documentação técnica.
+Garantir o cumprimento das Normas Regulamentadoras aplicáveis.</textarea>
+  </div>
+
+  <div class="section-title">RESPONSABILIDADES ESPECÍFICAS DO TÉCNICO DE SEGURANÇA</div>
+  <div class="form-section">
+    <ul class="measures-list">
+      <li>Supervisionar o uso correto de EPIs por todos os trabalhadores;</li>
+      <li>Realizar inspeções diárias nos equipamentos de segurança;</li>
+      <li>Orientar sobre procedimentos seguros para trabalho em altura;</li>
+      <li>Investigar e documentar acidentes e incidentes;</li>
+      <li>Ministrar treinamentos de segurança para a equipe;</li>
+      <li>Verificar condições de segurança antes do início dos trabalhos;</li>
+      <li>Manter documentação técnica atualizada;</li>
+      <li>Comunicar imediatamente situações de risco identificadas.</li>
+    </ul>
+  </div>
+
+  <div class="section-title">ORIENTAÇÕES ESPECÍFICAS PARA SUPERVISÃO</div>
+  <div class="form-section">
+    <ul class="safety-list">
+      <li>Verificar se todos os trabalhadores estão utilizando EPIs adequados;</li>
+      <li>Inspecionar equipamentos de proteção contra quedas antes de cada uso;</li>
+      <li>Orientar sobre procedimentos corretos de instalação de telas;</li>
+      <li>Garantir que as condições meteorológicas sejam adequadas para trabalho em altura;</li>
+      <li>Verificar se os pontos de ancoragem são seguros e resistentes;</li>
+      <li>Orientar sobre sinalização adequada da área de trabalho.</li>
+    </ul>
+  </div>
+
+  <!-- Seção de Procedimento em Caso de Acidente -->
+  <div class="section-title accident">PROCEDIMENTO EM CASO DE ACIDENTE DE TRABALHO</div>
+  <div class="form-section">
+    <ul class="accident-list">
+      <li>Prestar os primeiros socorros e acionar atendimento médico se necessário;</li>
+      <li>Isolar a área do acidente para preservar evidências;</li>
+      <li>Comunicar imediatamente a supervisão e RH da empresa;</li>
+      <li>Realizar investigação preliminar do acidente;</li>
+      <li>Coletar depoimentos de testemunhas;</li>
+      <li>Elaborar relatório técnico detalhado do ocorrido;</li>
+      <li>Auxiliar no preenchimento da CAT - Comunicação de Acidente do Trabalho.</li>
+    </ul>
+  </div>
+
+  <!-- Seção de Termo de Responsabilidade -->
+  <div class="section-title responsibility">TERMO DE RESPONSABILIDADE</div>
+  <div class="form-section">
+    <p style="margin-bottom: 20px; line-height: 1.6; font-size: 16px; text-align: justify;">
+      Como Técnico de Segurança do Trabalho, declaro estar ciente de minhas responsabilidades na supervisão 
+      e orientação dos demais trabalhadores quanto aos procedimentos de segurança, estando comprometido com 
+      a prevenção de acidentes e o cumprimento das Normas Regulamentadoras aplicáveis.
+    </p>
+
+    <p style="margin-bottom: 20px; line-height: 1.6; font-size: 16px; text-align: justify;">
+      <strong>Comprometo-me a exercer minhas funções com responsabilidade técnica e ética profissional, 
+      zelando pela segurança de toda a equipe de trabalho.</strong>
+    </p>
+
+    <!-- Área de assinatura -->
+    <div class="signature-container">
+      <div class="signature-row">
+        <div class="signature-column date">
+          <input type="text" placeholder="__/__/____" class="date-input" value="{{ data_hoje if data_hoje else '' }}">
+          <div class="signature-line"></div>
+          <p>Data</p>
+        </div>
+
+        <div class="signature-column technician">
+          <div class="tech-info">
+            <input type="text" class="tech-input" placeholder="Nome do Técnico" value="JONATAS SOUZA DE MORAES">
+            <input type="text" class="tech-input" placeholder="Cargo" value="Técnico de Segurança Trabalho">
+            <input type="text" class="tech-input" placeholder="Registro" value="MTB: 0133219/SP">
+          </div>
+          <div class="signature-area">
+            <img src="{{ url_for('static', filename='img/assinaturatst.png') }}" 
+                 alt="Assinatura do Técnico" 
+                 class="signature-image">
+          </div>
+          <div class="signature-line"></div>
+          <input type="text" class="tech-input" placeholder="Cargo para assinatura"
+            value="Técnico de Segurança do Trabalho">
+        </div>
+
+        <div class="signature-column employee">
+          <div style="margin-bottom: 10px;">
+            <label style="font-size: 14px; color: #666;">Nome do Técnico:</label><br>
+            <input type="text" class="employee-input" placeholder="Digite o nome do técnico"
+              value="{{ funcionario.nome if funcionario else '' }}" style="width: 100%; margin-top: 5px;">
+          </div>
+          <div class="signature-line"></div>
+          <p>Assinatura do Técnico de Segurança</p>
+          <p class="role-subtitle">{{ funcionario.funcao if funcionario else 'Técnico de Segurança do Trabalho' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção de Observações -->
+  <div class="section-title">OBSERVAÇÕES IMPORTANTES</div>
+  <div class="form-section">
+    <ul class="measures-list">
+      <li><strong>1.</strong> Esta Ordem de Serviço específica para Técnico de Segurança deve ser seguida rigorosamente.</li>
+      <li><strong>2.</strong> O técnico é responsável pela segurança de toda a equipe de trabalho.</li>
+      <li><strong>3.</strong> Qualquer situação de risco deve ser comunicada imediatamente à supervisão.</li>
+      <li><strong>4.</strong> Manter-se atualizado sobre as Normas Regulamentadoras aplicáveis.</li>
+      <li><strong>5.</strong> Documentar todas as atividades de segurança realizadas.</li>
+    </ul>
+  </div>
+
+<script>
+  (function () {
+    document.addEventListener('DOMContentLoaded', function () {
+      // Get the employee data passed from Flask
+      const funcionarioData = JSON.parse('{% if funcionario %}{{ funcionario|tojson|safe }}{% else %}null{% endif %}');
+      
+      // Get today's date in DD/MM/YYYY format
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const year = today.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      // Set the date in the signature section
+      const dateInput = document.querySelector('.date-input');
+      if (dateInput) {
+        dateInput.value = formattedDate;
+      }
+
+      // Populate the form fields
+      if (funcionarioData) {
+        document.getElementById('nome').value = funcionarioData.nome || '';
+        document.getElementById('cpf').value = funcionarioData.cpf || '';
+        document.getElementById('data_admissao').value = funcionarioData.data_admissao || '';
+
+        // Also populate the employee name in the signature section
+        const employeeInput = document.querySelector('.employee-input');
+        if (employeeInput) {
+          employeeInput.value = funcionarioData.nome || '';
+        }
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

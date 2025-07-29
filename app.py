@@ -2058,6 +2058,48 @@ def load_user(user_id):
     return Funcionario.query.get(int(user_id))
 
 
+def get_nr01_template_by_cargo(cargo):
+    """Determina qual template NR01 usar baseado no cargo do funcionário"""
+    cargo_lower = cargo.lower() if cargo else ''
+    
+    # Mapeamento de cargos para templates específicos
+    if 'técnico de segurança' in cargo_lower or 'tecnico de seguranca' in cargo_lower:
+        return 'nr01_tecnico_seguranca.html'
+    elif 'supervisor de instalação' in cargo_lower or ('supervisor' in cargo_lower and 'instalação' in cargo_lower):
+        return 'nr01_supervisor_instalacao.html'
+    elif 'instalador de telas de proteção' in cargo_lower or ('instalador' in cargo_lower and 'tela' in cargo_lower):
+        return 'nr01_instalador_telas.html'
+    elif 'encarregado de obra' in cargo_lower or 'encarregado' in cargo_lower:
+        return 'nr01_supervisor_instalacao.html'  # Encarregados usam template de supervisor
+    elif 'serralheiro' in cargo_lower:
+        return 'nr01_instalador_telas.html'  # Serralheiros usam template de instalador
+    elif ('ajudante' in cargo_lower or 'auxiliar' in cargo_lower) and ('instalação' in cargo_lower or 'tela' in cargo_lower):
+        return 'nr01.html'  # Template original para ajudantes
+    else:
+        # Para outros cargos, usar template genérico (original)
+        return 'nr01.html'
+
+def get_nr01_template_impressao_by_cargo(cargo):
+    """Determina qual template de impressão NR01 usar baseado no cargo do funcionário"""
+    cargo_lower = cargo.lower() if cargo else ''
+    
+    # Mapeamento de cargos para templates de impressão específicos
+    if 'técnico de segurança' in cargo_lower or 'tecnico de seguranca' in cargo_lower:
+        return 'nr01_tecnico_seguranca_impressao.html'
+    elif 'supervisor de instalação' in cargo_lower or ('supervisor' in cargo_lower and 'instalação' in cargo_lower):
+        return 'nr01_supervisor_instalacao_impressao.html'
+    elif 'instalador de telas de proteção' in cargo_lower or ('instalador' in cargo_lower and 'tela' in cargo_lower):
+        return 'nr01_instalador_telas_impressao.html'
+    elif 'encarregado de obra' in cargo_lower or 'encarregado' in cargo_lower:
+        return 'nr01_supervisor_instalacao_impressao.html'  # Encarregados usam template de supervisor
+    elif 'serralheiro' in cargo_lower:
+        return 'nr01_instalador_telas_impressao.html'  # Serralheiros usam template de instalador
+    elif ('ajudante' in cargo_lower or 'auxiliar' in cargo_lower) and ('instalação' in cargo_lower or 'tela' in cargo_lower):
+        return 'nr01_impressao.html'  # Template original para ajudantes
+    else:
+        # Para outros cargos, usar template genérico (original)
+        return 'nr01_impressao.html'
+
 @app.route('/nr01/<int:funcionario_id>')
 def nr01_certificado(funcionario_id):
     """Exibe o certificado NR01 com dados do funcionário preenchidos"""
@@ -2110,6 +2152,7 @@ Realizar trabalho em altura acima de 2,00m onde existe risco de queda.''')
     dados_funcionario = {
         'nome': funcionario.nome,
         'cpf': funcionario.cpf_formatado,
+        'funcao': funcao_funcionario,  # Adicionado campo funcao
         'cargo': funcao_funcionario,
         'descricao_atividade': descricao_atividade,
         'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
@@ -2122,7 +2165,10 @@ Realizar trabalho em altura acima de 2,00m onde existe risco de queda.''')
     # Data atual para preenchimento automático
     data_hoje = datetime.now().strftime('%d/%m/%Y')
 
-    return render_template('nr01.html', funcionario=dados_funcionario, data_hoje=data_hoje)
+    # Selecionar template baseado no cargo
+    template_name = get_nr01_template_by_cargo(funcao_funcionario)
+    
+    return render_template(template_name, funcionario=dados_funcionario, data_hoje=data_hoje)
 
 
 @app.route('/nr01')
@@ -2249,6 +2295,7 @@ Realizar trabalho em altura acima de 2,00m onde existe risco de queda.''')
     dados_funcionario = {
         'nome': funcionario.nome,
         'cpf': funcionario.cpf_formatado,
+        'funcao': funcao_funcionario,  # Adicionado campo funcao
         'cargo': funcao_funcionario,
         'descricao_atividade': descricao_atividade,
         'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
@@ -2261,7 +2308,10 @@ Realizar trabalho em altura acima de 2,00m onde existe risco de queda.''')
     # Data atual
     data_hoje = datetime.now().strftime('%d/%m/%Y')
 
-    return render_template('nr01_impressao.html', funcionario=dados_funcionario, data_hoje=data_hoje)
+    # Selecionar template de impressão baseado no cargo
+    template_name = get_nr01_template_impressao_by_cargo(funcao_funcionario)
+
+    return render_template(template_name, funcionario=dados_funcionario, data_hoje=data_hoje)
 
 
 if __name__ == '__main__':

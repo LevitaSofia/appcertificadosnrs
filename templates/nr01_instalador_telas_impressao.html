@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impressão - NR01 - Instalador de Telas</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 12pt !important;
+        line-height: 1.3 !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .page-break {
+        page-break-before: always;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 15px;
+      background-color: white;
+      font-size: 11pt;
+      line-height: 1.3;
+      color: #000;
+    }
+
+    .header-box {
+      border: 2px solid #cc0000;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-box img {
+      width: 140px;
+      height: auto;
+      border: 2px solid #cc0000;
+      border-radius: 6px;
+      padding: 3px;
+    }
+
+    .header-content {
+      flex: 1;
+      text-align: center;
+    }
+
+    .company-name {
+      color: #cc0000;
+      font-weight: bold;
+      font-size: 18pt;
+      margin-bottom: 6px;
+    }
+
+    .address-info {
+      font-size: 9pt;
+      line-height: 1.2;
+    }
+
+    .main-title {
+      background-color: #cc0000;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-size: 14pt;
+      font-weight: bold;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .form-section {
+      margin: 15px 0;
+      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 6px;
+      background-color: white;
+    }
+
+    .description,
+    .risk,
+    .epi-title,
+    .section-title {
+      background-color: #cc0000;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+      margin: 15px 0;
+      border-radius: 6px;
+    }
+
+    .measures-list,
+    .safety-list,
+    .accident-list {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .measures-list li,
+    .safety-list li,
+    .accident-list li {
+      margin-bottom: 8px;
+      line-height: 1.3;
+      font-size: 10pt;
+      text-align: justify;
+    }
+
+    .info-fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .field-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .field-label {
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .field-value {
+      border-bottom: 1px solid #000;
+      padding: 2px;
+      min-height: 20px;
+      font-size: 10pt;
+    }
+
+    .signature-container {
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .signature-column {
+      flex: 1;
+      min-width: 160px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .signature-line {
+      border-bottom: 1px solid #000;
+      margin: 8px 0;
+      min-width: 160px;
+      height: 20px;
+    }
+
+    .signature-image {
+      max-width: 140px;
+      max-height: 50px;
+      margin-bottom: 8px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .tech-info {
+      font-size: 9pt;
+      margin-bottom: 8px;
+    }
+
+    .responsibility-text {
+      font-size: 10pt;
+      line-height: 1.4;
+      text-align: justify;
+      margin-bottom: 15px;
+    }
+
+    .cargo-field {
+      font-weight: bold;
+      font-size: 11pt;
+      border-bottom: 1px solid #000;
+      padding: 3px;
+      margin: 5px 0;
+    }
+
+    .print-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    .print-button:hover {
+      background-color: #990000;
+    }
+  </style>
+</head>
+
+<body>
+  <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
+
+  <div class="header-box">
+    <img src="{{ url_for('static', filename='img/Alta Telas 10 anos.jpeg') }}" alt="Logo da Empresa">
+    <div class="header-content">
+      <div class="company-name">ALTA TELAS REDES DE PROTEÇÃO - LTDA</div>
+      <div class="address-info">
+        RUA: PADRE BENTO DIAS PACHECO BAIRRO: GERALDO CORREIA DE CARVALHO N° 480<br>
+        CEP: 14061-470 - Ribeirão Preto - São Paulo - Brasil<br>
+        CNPJ: 20.017.812/0001-57
+      </div>
+    </div>
+  </div>
+
+  <div class="main-title">ORDEM DE SERVIÇO - NR01 - INSTALADOR DE TELAS</div>
+
+  <div class="form-section">
+    <div class="info-fields">
+      <div class="field-group" style="flex: 2;">
+        <div class="field-label">Nome:</div>
+        <div class="field-value">{{ funcionario.nome if funcionario else '_' * 50 }}</div>
+      </div>
+    </div>
+    
+    <div class="info-fields">
+      <div class="field-group">
+        <div class="field-label">CPF:</div>
+        <div class="field-value">{{ funcionario.cpf if funcionario else '_' * 20 }}</div>
+      </div>
+      
+      <div class="field-group">
+        <div class="field-label">Data de Admissão:</div>
+        <div class="field-value">{{ funcionario.data_admissao if funcionario else '_' * 15 }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="field-label">Cargo:</div>
+    <div class="cargo-field">{{ funcionario.funcao if funcionario else 'INSTALADOR DE TELAS DE PROTEÇÃO' }}</div>
+    <p style="margin-top: 10px; text-align: justify; font-size: 10pt;">
+      Pela presente Ordem de Serviço, objetivamos informar o Instalador de Telas sobre os procedimentos de segurança
+      que deverão ser adotados durante a execução de trabalhos de instalação de redes de proteção, conforme estabelece 
+      a NR-1, item 1.7, sobre as condições de segurança e saúde no ambiente de trabalho, visando prevenir acidentes 
+      e/ou doenças ocupacionais.
+    </p>
+  </div>
+
+  <div class="description">DESCRIÇÃO DAS ATIVIDADES</div>
+  <div class="form-section">
+    <p style="font-size: 10pt; text-align: justify; line-height: 1.4;">
+      Executar instalação de redes e telas de proteção.
+      Realizar medições e marcações dos pontos de fixação.
+      Preparar e organizar materiais e ferramentas.
+      Instalar ganchos, parafusos e demais elementos de fixação.
+      Tensionar e ajustar redes conforme especificações técnicas.
+      Utilizar EPIs obrigatórios durante toda a execução.
+      Manter organização e limpeza do local de trabalho.
+      Comunicar ao supervisor qualquer situação de risco.
+    </p>
+  </div>
+
+  <div class="section-title">PROCEDIMENTOS DE SEGURANÇA OBRIGATÓRIOS</div>
+  <div class="form-section">
+    <ul class="measures-list">
+      <li>Utilizar sempre cinturão de segurança com trava-quedas;</li>
+      <li>Verificar pontos de ancoragem antes de se conectar;</li>
+      <li>Usar capacete, óculos de proteção e calçado de segurança;</li>
+      <li>Inspecionar ferramentas e equipamentos antes do uso;</li>
+      <li>Verificar condições meteorológicas antes do trabalho;</li>
+      <li>Manter três pontos de apoio ao subir em escadas;</li>
+      <li>Comunicar qualquer situação de risco ao supervisor;</li>
+      <li>Não trabalhar sob efeito de álcool ou substâncias;</li>
+      <li>Seguir orientações do supervisor de instalação.</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <div class="section-title">TÉCNICAS CORRETAS DE INSTALAÇÃO</div>
+  <div class="form-section">
+    <ul class="safety-list">
+      <li>Realizar medições precisas antes de iniciar furação;</li>
+      <li>Verificar resistência da estrutura nos pontos de fixação;</li>
+      <li>Utilizar furadeira com broca adequada para cada material;</li>
+      <li>Instalar ganchos respeitando espaçamento especificado;</li>
+      <li>Tensionar redes uniformemente evitando sobrecarga;</li>
+      <li>Verificar alinhamento e acabamento da instalação;</li>
+      <li>Testar resistência das fixações após instalação;</li>
+      <li>Manter área de trabalho sempre organizada e limpa.</li>
+    </ul>
+  </div>
+
+  <div class="section-title">EPIs OBRIGATÓRIOS</div>
+  <div class="form-section">
+    <ul class="measures-list">
+      <li><strong>Cinturão de Segurança:</strong> Com trava-quedas, certificado pelo CA;</li>
+      <li><strong>Capacete:</strong> Proteção contra impactos e objetos que caem;</li>
+      <li><strong>Óculos de Proteção:</strong> Contra fragmentos durante furação;</li>
+      <li><strong>Calçado de Segurança:</strong> Com biqueira de aço e solado antiderrapante;</li>
+      <li><strong>Luvas:</strong> Para proteção das mãos durante manuseio de materiais;</li>
+      <li><strong>Protetor Auricular:</strong> Durante uso de equipamentos ruidosos;</li>
+      <li><strong>Corda de Segurança:</strong> Linha de vida adicional quando necessário.</li>
+    </ul>
+  </div>
+
+  <div class="section-title">PROCEDIMENTO EM CASO DE ACIDENTE DE TRABALHO</div>
+  <div class="form-section">
+    <ul class="accident-list">
+      <li>Interromper imediatamente o trabalho e avisar o supervisor;</li>
+      <li>Prestar primeiros socorros se souber e for seguro;</li>
+      <li>Acionar atendimento médico de emergência (SAMU 192);</li>
+      <li>Não remover a vítima do local sem orientação médica;</li>
+      <li>Isolar a área do acidente e preservar evidências;</li>
+      <li>Comunicar imediatamente a empresa e família;</li>
+      <li>Fornecer informações precisas sobre o ocorrido;</li>
+      <li>Aguardar liberação para retomar as atividades.</li>
+    </ul>
+  </div>
+
+  <div class="section-title">TERMO DE RESPONSABILIDADE</div>
+  <div class="form-section">
+    <p class="responsibility-text">
+      Como Instalador de Telas, declaro estar ciente dos procedimentos de segurança descritos nesta Ordem de Serviço
+      e comprometo-me a seguir rigorosamente todas as orientações, utilizando sempre os EPIs obrigatórios e
+      comunicando qualquer situação de risco identificada.
+    </p>
+
+    <p class="responsibility-text">
+      <strong>Comprometo-me a executar meu trabalho com segurança, responsabilidade e qualidade, 
+      zelando pela minha integridade física e a de meus colegas de equipe.</strong>
+    </p>
+  </div>
+
+  <div class="signature-container">
+    <div class="signature-row">
+      <div class="signature-column">
+        <div class="field-value">{{ data_hoje if data_hoje else '__/__/____' }}</div>
+        <div class="signature-line"></div>
+        <p style="font-size: 9pt;">Data</p>
+      </div>
+
+      <div class="signature-column">
+        <div class="tech-info">
+          <div>JONATAS SOUZA DE MORAES</div>
+          <div>Técnico de Segurança Trabalho</div>
+          <div>MTB: 0133219/SP</div>
+        </div>
+        <div class="signature-area">
+          <img src="{{ url_for('static', filename='img/assinaturatst.png') }}" 
+               alt="Assinatura do Técnico" 
+               class="signature-image">
+        </div>
+        <div class="signature-line"></div>
+        <p style="font-size: 9pt;">Técnico de Segurança do Trabalho</p>
+      </div>
+
+      <div class="signature-column">
+        <div class="field-value">{{ funcionario.nome if funcionario else '_' * 25 }}</div>
+        <div class="signature-line"></div>
+        <p style="font-size: 9pt;">Assinatura do Instalador</p>
+        <p style="font-size: 8pt; margin-top: 5px;">{{ funcionario.funcao if funcionario else 'Instalador de Telas' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">OBSERVAÇÕES IMPORTANTES</div>
+  <div class="form-section">
+    <ul class="measures-list">
+      <li><strong>1.</strong> Esta Ordem de Serviço específica para Instalador de Telas deve ser seguida rigorosamente.</li>
+      <li><strong>2.</strong> É proibido trabalhar sem os EPIs obrigatórios.</li>
+      <li><strong>3.</strong> Qualquer dúvida sobre procedimentos deve ser esclarecida com o supervisor.</li>
+      <li><strong>4.</strong> Mantenha sempre a comunicação com a equipe durante o trabalho.</li>
+      <li><strong>5.</strong> Em caso de condições climáticas adversas, interrompa o trabalho.</li>
+    </ul>
+  </div>
+
+  <script>
+    // Auto-print when page loads if needed
+    window.addEventListener('load', function() {
+      // Uncomment the line below if you want auto-print
+      // window.print();
+    });
+  </script>
+
+</body>
+</html>
