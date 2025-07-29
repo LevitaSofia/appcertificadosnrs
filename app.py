@@ -2062,12 +2062,56 @@ def load_user(user_id):
 def nr01_certificado(funcionario_id):
     """Exibe o certificado NR01 com dados do funcionário preenchidos"""
     funcionario = Funcionario.query.get_or_404(funcionario_id)
+    
+    # Mapeamento de funções para descrições de atividades
+    descricoes_atividades = {
+        'Encarregado de obra': '''Supervisionar e coordenar a instalação de redes de proteção em polietileno para sacadas, janelas e quadras.
+Orientar e fiscalizar a equipe de instalação.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Verificar a qualidade e segurança das instalações executadas.''',
+        
+        'Instalador de Telas': '''Instalar redes de proteção em polietileno para sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Manuseio de ferramentas de perfuração e fixação.
+Medição e corte de telas de proteção conforme especificações.''',
+        
+        'ajudante de instalação de telas de proteção': '''Ajudar o instalador na instalação de redes de polietileno para proteção em sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Auxiliar no transporte e posicionamento de materiais e ferramentas.
+Apoiar nas atividades de medição, corte e fixação das telas.''',
+        
+        'Ajudante Instalação de telas e redes': '''Ajudar o instalador na instalação de redes de polietileno para proteção em sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Auxiliar no transporte e posicionamento de materiais e ferramentas.
+Apoiar nas atividades de medição, corte e fixação das telas.''',
+        
+        'SERRALHEIRO': '''Executar atividades de serralheria na fabricação e instalação de estruturas metálicas.
+Realizar soldas, cortes e montagem de peças metálicas.
+Trabalhar com ferramentas específicas da serralheria.
+Apoiar na instalação de suportes e fixações para telas de proteção.''',
+        
+        'Assistente Administrativo': '''Executar atividades administrativas de apoio à empresa.
+Atendimento ao cliente presencial e telefônico.
+Organização de documentos e controle de estoque.
+Elaboração de orçamentos e relatórios administrativos.''',
+        
+        'Menor Aprendiz': '''Participar de programa de aprendizagem profissional.
+Auxiliar em atividades administrativas básicas.
+Organização de materiais e limpeza do ambiente de trabalho.
+Apoio em atividades não relacionadas ao trabalho em altura.'''
+    }
 
     # Preparar dados para o template
+    funcao_funcionario = funcionario.funcao if funcionario.funcao else 'ajudante de instalação de telas de proteção'
+    descricao_atividade = descricoes_atividades.get(funcao_funcionario, 
+        '''Ajudar o instalador na instalação de redes de polietileno para proteção em sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.''')
+    
     dados_funcionario = {
         'nome': funcionario.nome,
         'cpf': funcionario.cpf_formatado,
-        'cargo': funcionario.funcao if funcionario.funcao else 'AJUDANTE DE INSTALADOR DE TELAS',
+        'cargo': funcao_funcionario,
+        'descricao_atividade': descricao_atividade,
         'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
         'data_nascimento': funcionario.data_nascimento.strftime('%d/%m/%Y') if funcionario.data_nascimento else '',
         'rg': funcionario.rg if funcionario.rg else '',
@@ -2157,12 +2201,56 @@ def nr01_preview():
 def nr01_para_impressao(funcionario_id):
     """Exibe o certificado NR01 otimizado para impressão/PDF"""
     funcionario = Funcionario.query.get_or_404(funcionario_id)
+    
+    # Mapeamento de funções para descrições de atividades (mesmo do nr01_certificado)
+    descricoes_atividades = {
+        'Encarregado de obra': '''Supervisionar e coordenar a instalação de redes de proteção em polietileno para sacadas, janelas e quadras.
+Orientar e fiscalizar a equipe de instalação.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Verificar a qualidade e segurança das instalações executadas.''',
+        
+        'Instalador de Telas': '''Instalar redes de proteção em polietileno para sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Manuseio de ferramentas de perfuração e fixação.
+Medição e corte de telas de proteção conforme especificações.''',
+        
+        'ajudante de instalação de telas de proteção': '''Ajudar o instalador na instalação de redes de polietileno para proteção em sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Auxiliar no transporte e posicionamento de materiais e ferramentas.
+Apoiar nas atividades de medição, corte e fixação das telas.''',
+        
+        'Ajudante Instalação de telas e redes': '''Ajudar o instalador na instalação de redes de polietileno para proteção em sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.
+Auxiliar no transporte e posicionamento de materiais e ferramentas.
+Apoiar nas atividades de medição, corte e fixação das telas.''',
+        
+        'SERRALHEIRO': '''Executar atividades de serralheria na fabricação e instalação de estruturas metálicas.
+Realizar soldas, cortes e montagem de peças metálicas.
+Trabalhar com ferramentas específicas da serralheria.
+Apoiar na instalação de suportes e fixações para telas de proteção.''',
+        
+        'Assistente Administrativo': '''Executar atividades administrativas de apoio à empresa.
+Atendimento ao cliente presencial e telefônico.
+Organização de documentos e controle de estoque.
+Elaboração de orçamentos e relatórios administrativos.''',
+        
+        'Menor Aprendiz': '''Participar de programa de aprendizagem profissional.
+Auxiliar em atividades administrativas básicas.
+Organização de materiais e limpeza do ambiente de trabalho.
+Apoio em atividades não relacionadas ao trabalho em altura.'''
+    }
 
     # Preparar dados para o template
+    funcao_funcionario = funcionario.funcao if funcionario.funcao else 'ajudante de instalação de telas de proteção'
+    descricao_atividade = descricoes_atividades.get(funcao_funcionario, 
+        '''Ajudar o instalador na instalação de redes de polietileno para proteção em sacadas, janelas e quadras.
+Realizar trabalho em altura acima de 2,00m onde existe risco de queda.''')
+    
     dados_funcionario = {
         'nome': funcionario.nome,
         'cpf': funcionario.cpf_formatado,
-        'cargo': funcionario.funcao if funcionario.funcao else 'AJUDANTE DE INSTALADOR DE TELAS',
+        'cargo': funcao_funcionario,
+        'descricao_atividade': descricao_atividade,
         'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y') if funcionario.data_admissao else '',
         'data_nascimento': funcionario.data_nascimento.strftime('%d/%m/%Y') if funcionario.data_nascimento else '',
         'rg': funcionario.rg if funcionario.rg else '',
