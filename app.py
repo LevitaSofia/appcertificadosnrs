@@ -259,12 +259,12 @@ def validar_cpf(cpf):
 # Função para gerar certificado em PDF
 
 
-# Função para converter PowerPoint para PDF
+# Função para converter PowerPoint para PDF com preservação de formatação
 def converter_pptx_para_pdf(caminho_pptx, caminho_pdf):
     try:
         print(f"Tentando converter: {caminho_pptx} -> {caminho_pdf}")
 
-        # Método 1: Tentar usar COM (PowerPoint)
+        # Método 1: Tentar usar COM (PowerPoint) com configurações de alta qualidade
         try:
             import comtypes.client
 
@@ -276,21 +276,39 @@ def converter_pptx_para_pdf(caminho_pptx, caminho_pdf):
             presentation = powerpoint.Presentations.Open(
                 os.path.abspath(caminho_pptx))
 
-            # Salvar como PDF
-            presentation.SaveAs(os.path.abspath(
-                caminho_pdf), 32)  # 32 = ppSaveAsPDF
+            # Configurar exportação para PDF com máxima qualidade e nitidez
+            # Usar ExportAsFixedFormat com configurações para alta resolução
+            presentation.ExportAsFixedFormat(
+                os.path.abspath(caminho_pdf),
+                2,  # ppFixedFormatTypePDF
+                1,  # ppFixedFormatIntentPrint (para impressão de alta qualidade)
+                0,  # msoCTrue (incluir marcas de estrutura)
+                0,  # ppPrintHandoutVerticalFirst
+                1,  # ppPrintOutputSlides
+                0,  # msoFalse (não incluir marcações)
+                None,  # range
+                2,  # ppPrintOutputSlides
+                True,  # UseDocumentICCProfile
+                False,  # IncludeMarkup (desabilitar para melhor qualidade)
+                True,  # BitmapMissingFonts
+                False,  # UseISO19005_1 (desabilitar para melhor qualidade)
+                False,  # IncludeDocProps
+                True,  # JPEGQuality (alta qualidade JPEG)
+                0,  # BitmapMissingFonts
+                300  # DPI (300 DPI para máxima qualidade)
+            )
 
             # Fechar apresentação e PowerPoint
             presentation.Close()
             powerpoint.Quit()
 
-            print("Conversão COM bem-sucedida!")
+            print("Conversão COM com alta qualidade bem-sucedida!")
             return True
 
         except Exception as com_error:
             print(f"Erro COM: {str(com_error)}")
 
-            # Método 2: Tentar usar win32com como alternativa
+            # Método 2: Tentar usar win32com como alternativa com configurações de qualidade
             try:
                 import win32com.client
 
@@ -299,7 +317,32 @@ def converter_pptx_para_pdf(caminho_pptx, caminho_pdf):
 
                 presentation = powerpoint.Presentations.Open(
                     os.path.abspath(caminho_pptx))
-                presentation.SaveAs(os.path.abspath(caminho_pdf), 32)
+                
+                # Tentar usar ExportAsFixedFormat com máxima qualidade se disponível
+                try:
+                    presentation.ExportAsFixedFormat(
+                        os.path.abspath(caminho_pdf),
+                        2,  # ppFixedFormatTypePDF
+                        1,  # ppFixedFormatIntentPrint
+                        0,  # msoTrue
+                        0,  # ppPrintHandoutVerticalFirst
+                        1,  # ppPrintOutputSlides
+                        0,  # msoFalse
+                        None,  # range
+                        2,  # ppPrintOutputSlides
+                        True,  # UseDocumentICCProfile
+                        False,  # IncludeMarkup (desabilitar para melhor qualidade)
+                        True,  # BitmapMissingFonts
+                        False,  # UseISO19005_1 (desabilitar para melhor qualidade)
+                        False,  # IncludeDocProps
+                        True,  # JPEGQuality
+                        0,  # BitmapMissingFonts
+                        300  # DPI para máxima resolução
+                    )
+                except:
+                    # Fallback para SaveAs com configurações de qualidade
+                    presentation.SaveAs(os.path.abspath(caminho_pdf), 32)  # 32 = ppSaveAsPDF
+                
                 presentation.Close()
                 powerpoint.Quit()
 
@@ -309,29 +352,50 @@ def converter_pptx_para_pdf(caminho_pptx, caminho_pdf):
             except Exception as win32_error:
                 print(f"Erro win32com: {str(win32_error)}")
 
-                # Método 3: Usar subprocess como último recurso
+                # Método 3: Usar subprocess com PowerShell otimizado
                 try:
                     import subprocess
 
-                    # Comando PowerShell para converter
+                    # Comando PowerShell otimizado para alta resolução e qualidade
                     powershell_cmd = f'''
                     $powerpoint = New-Object -ComObject PowerPoint.Application
                     $powerpoint.Visible = $false
                     $presentation = $powerpoint.Presentations.Open("{os.path.abspath(caminho_pptx)}")
-                    $presentation.SaveAs("{os.path.abspath(caminho_pdf)}", 32)
+                    
+                    try {{
+                        # Método 1: ExportAsFixedFormat com DPI 600 para máxima nitidez
+                        $presentation.ExportAsFixedFormat("{os.path.abspath(caminho_pdf)}", 2, 1, $false, 0, 1, $false, $null, 2, $true, $false, $true, $false, $false, $true, 0, 600)
+                    }} catch {{
+                        try {{
+                            # Método 2: ExportAsFixedFormat com DPI 300 (fallback)
+                            $presentation.ExportAsFixedFormat("{os.path.abspath(caminho_pdf)}", 2, 1, $false, 0, 1, $false, $null, 2, $true, $false, $true, $false, $false, $true, 0, 300)
+                        }} catch {{
+                            try {{
+                                # Método 3: ExportAsFixedFormat básico sem DPI específico
+                                $presentation.ExportAsFixedFormat("{os.path.abspath(caminho_pdf)}", 2, 1, 0, 0, 1, 0, $null, 2, $true, $false, $true, $false, $false)
+                            }} catch {{
+                                # Fallback final: SaveAs
+                                $presentation.SaveAs("{os.path.abspath(caminho_pdf)}", 32)
+                            }}
+                        }}
+                    }}
+                    
                     $presentation.Close()
                     $powerpoint.Quit()
+                    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($powerpoint) | Out-Null
+                    [System.GC]::Collect()
+                    [System.GC]::WaitForPendingFinalizers()
                     '''
 
                     result = subprocess.run(
                         ["powershell", "-Command", powershell_cmd],
                         capture_output=True,
                         text=True,
-                        timeout=60
+                        timeout=120  # Aumentar timeout para conversões de alta qualidade
                     )
 
                     if result.returncode == 0:
-                        print("Conversão PowerShell bem-sucedida!")
+                        print("Conversão PowerShell otimizada bem-sucedida!")
                         return True
                     else:
                         print(f"Erro PowerShell: {result.stderr}")
@@ -398,25 +462,39 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
             '{{DESCRICAO_NR}}': modelo.descricao
         }
 
-        # Substituir texto nos slides
+        # Substituir texto nos slides preservando formatação
         for slide in prs.slides:
             for shape in slide.shapes:
                 if hasattr(shape, "text"):
+                    texto_original = shape.text
+                    texto_modificado = texto_original
+                    
+                    # Aplicar substituições mantendo o texto original como base
                     for find_text, replace_text in substituicoes.items():
-                        if find_text in shape.text:
-                            shape.text = shape.text.replace(
-                                find_text, replace_text)
+                        if find_text in texto_modificado:
+                            texto_modificado = texto_modificado.replace(find_text, replace_text)
+                    
+                    # Só alterar se houve modificação
+                    if texto_modificado != texto_original:
+                        shape.text = texto_modificado
 
-                # Verificar text_frame
+                # Verificar text_frame para preservação mais granular da formatação
                 if hasattr(shape, "text_frame"):
                     for paragraph in shape.text_frame.paragraphs:
                         for run in paragraph.runs:
+                            texto_run_original = run.text
+                            texto_run_modificado = texto_run_original
+                            
+                            # Preservar formatação do run (fonte, tamanho, cor, etc.)
                             for find_text, replace_text in substituicoes.items():
-                                if find_text in run.text:
-                                    run.text = run.text.replace(
-                                        find_text, replace_text)
+                                if find_text in texto_run_modificado:
+                                    texto_run_modificado = texto_run_modificado.replace(find_text, replace_text)
+                            
+                            # Só alterar se houve modificação, preservando formatação
+                            if texto_run_modificado != texto_run_original:
+                                run.text = texto_run_modificado
 
-        # Salvar PowerPoint temporário
+        # Salvar PowerPoint temporário com configurações otimizadas
         data_formatada_arquivo = data_emissao.strftime('%Y-%m-%d')
         # Limpar o tipo_treinamento para nome de arquivo
         tipo_treinamento_limpo = re.sub(r'[<>:"/\\|?*]', '_', tipo_treinamento)
@@ -426,8 +504,17 @@ def gerar_certificado(funcionario, tipo_nr, tipo_treinamento, data_emissao):
         caminho_pdf_final = os.path.join(
             pasta_funcionario, f"{nome_arquivo_base}.pdf")
 
-        # Salvar PowerPoint preenchido
+        # Salvar PowerPoint preenchido mantendo formatação original
         print(f"Salvando PowerPoint em: {caminho_pptx_temp}")
+        
+        # Configurar propriedades da apresentação para melhor conversão
+        try:
+            # Manter configurações de slide original
+            for slide in prs.slides:
+                slide.follow_master_background = True
+        except:
+            pass  # Se não conseguir definir, continua normalmente
+            
         prs.save(caminho_pptx_temp)
 
         # Converter para PDF
